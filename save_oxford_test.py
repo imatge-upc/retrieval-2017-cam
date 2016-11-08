@@ -5,22 +5,28 @@ import utils_oxford
 from scipy.misc import imread, imresize, imsave
 
 
-image_train_list_path = "/imatge/ajimenez/workspace/ITR/lists/list_oxford.txt"
-
-name_file = 'oxford_bb.h5'
-
-img_width = 640
-img_height = 640
-
-file_path = '/imatge/ajimenez/workspace/ITR/datasets_hfd5/oxford_test_'+str(img_width)+'/'
-
+image_train_list_path_oxford = "/imatge/ajimenez/workspace/ITR/lists/list_oxford.txt"
+image_train_list_path_paris = ""
 
 bound_queries = True
 
-f = h5py.File('../models/mean_places.h5','r')
-mean_value = f.get('/data')
-mean_value = np.array(mean_value)
-f.close()
+img_width = 480
+img_height = 480
+
+file_path = '/imatge/ajimenez/work/datasets_hdf5/oxford/'
+#file_path = '/imatge/ajimenez/work/datasets_hdf5/paris/'
+
+
+name_file = 'oxford_' + str(img_width)
+if bound_queries:
+    name_file += '_bb'
+name_file += '.h5'
+
+
+#f = h5py.File('../models/mean_places.h5','r')
+#mean_value = f.get('/data')
+#mean_value = np.array(mean_value)
+#f.close()
 
 print mean_value.shape
 sys.stdout.flush()

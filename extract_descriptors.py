@@ -3,35 +3,144 @@ import numpy as np
 import time
 from sklearn.decomposition import PCA
 import sys
-
-cam_path = '/imatge/ajimenez/work/results_ITR/cam_masks/googlenet_places/oxford_cams_5.h5'
-results_path = '/imatge/ajimenez/work/results_ITR/descriptors/'
-
+from utils_datasets import read_dataset_properties, create_folders, load_data, save_data
+from pooling_functions import weighted_pooling
 
 #PARAMETERS
 
+dataset = 'Paris'
+
+dim = '1024x720'
+
+layer = 'conv5_3'
+
+local_search = True
+
+num_features = 512
+
 # THRESHOLD CAMS
-thresh_cam = 0.1
+thresh_cam = 0
+
 # PCA
 pca_on = False
-pca_dim = 512
+if pca_on:
+    pca_load_path = '/imatge/ajimenez/work/ITR/oxford/descriptors/regions/vgg_conv5_3/1024x720/oxford_fusion_32_wp.h5'
+    pca_dim = 512
+    pca_name = '_pca_oxford_32_wp'
+
 # WEIGHT
-weight = True
+weight = False
 # Perform also max pooling
 max_pooling = True
 # Load features and masks
-num_classes = 4
+num_classes = 8
 
-name_result = 'oxford_' + str(num_classes) + '_th_' + str(thresh_cam)
+FUSION = True
+
+if FUSION:
+    print '--FUSION--'
+
+save_regions_for_pca = True
+
+if dataset == 'Oxford':
+    # Path Dataset
+    dataset_path = '/imatge/ajimenez/work/ITR/oxford/datasets_hdf5/places/' + dim + '/'
+    name_h, n_chunks_h, batchsize_h, total_imgs_h = read_dataset_properties(dataset_path + 'oxford_h_info.txt')
+    name_v, n_chunks_v, batchsize_v, total_imgs_v = read_dataset_properties(dataset_path + 'oxford_v_info.txt')
+    path_descriptors = '/imatge/ajimenez/work/ITR/oxford/descriptors/' + 'vgg_' + layer+'/' + dim + '/'
+    if local_search:
+        path_descriptors += 'ls/'
+    create_folders(path_descriptors)
+    feat_path = '/imatge/ajimenez/work/ITR/oxford/features/' + 'vgg_16_imagenet' + '/' + layer + '/' + dim + '/'
+    cams_path = '/imatge/ajimenez/work/ITR/oxford/cam_masks/' + 'googlenet' + '/' + dim + '/'
+    if local_search:
+        h_query_feat = feat_path + 'oxford_queries_h_ls.h5'
+        v_query_feat = feat_path + 'oxford_queries_v_ls.h5'
+        h_query_cams = cams_path + 'oxford_queries_h_ls.h5'
+        v_query_cams = cams_path + 'oxford_queries_v_ls.h5'
+    else:
+        h_query_feat = feat_path + 'oxford_queries_h.h5'
+        v_query_feat = feat_path + 'oxford_queries_v.h5'
+        h_query_cams = cams_path + 'oxford_queries_h.h5'
+        v_query_cams = cams_path + 'oxford_queries_v.h5'
+    feat_path += 'oxford'
+    cams_path += 'oxford'
+    num_images = 5063
+    name_descriptors = 'oxford_' + 'fusion_' + str(num_classes) + '_th_' + str(thresh_cam)
+
+    if save_regions_for_pca:
+        regions_for_pca_save_path = '/imatge/ajimenez/work/ITR/oxford/descriptors/' + 'regions/' + 'vgg_' + layer + '/'+ dim +'/'
+        if local_search:
+            regions_for_pca_save_path += 'ls/'
+        regions_name_wp = 'oxford_fusion_' + str(num_classes)+'_wp.h5'
+        regions_name_mp = 'oxford_fusion_' + str(num_classes) + '_mp.h5'
+        create_folders(regions_for_pca_save_path)
+
+if dataset == 'Paris':
+    dataset_path = '/imatge/ajimenez/work/ITR/paris/datasets_hdf5/places/' + dim + '/'
+    name_h, n_chunks_h, batchsize_h, total_imgs_h = read_dataset_properties(dataset_path + 'paris_h_info.txt')
+    name_v, n_chunks_v, batchsize_v, total_imgs_v = read_dataset_properties(dataset_path + 'paris_v_info.txt')
+    path_descriptors = '/imatge/ajimenez/work/ITR/paris/descriptors/' + 'vgg_' + layer+'/' + dim + '/'
+    if local_search:
+        path_descriptors += 'ls/'
+    create_folders(path_descriptors)
+    feat_path = '/imatge/ajimenez/work/ITR/paris/features/' + 'vgg_16_imagenet' + '/' + layer + '/' + dim + '/'
+    cams_path = '/imatge/ajimenez/work/ITR/paris/cam_masks/' + 'googlenet' + '/' + dim + '/'
+    if local_search:
+        h_query_feat = feat_path + 'paris_queries_h_ls.h5'
+        v_query_feat = feat_path + 'paris_queries_v_ls.h5'
+        h_query_cams = cams_path + 'paris_queries_h_ls.h5'
+        v_query_cams = cams_path + 'paris_queries_v_ls.h5'
+    else:
+        h_query_feat = feat_path + 'paris_queries_h.h5'
+        v_query_feat = feat_path + 'paris_queries_v.h5'
+        h_query_cams = cams_path + 'paris_queries_h.h5'
+        v_query_cams = cams_path + 'paris_queries_v.h5'
+
+    feat_path += 'paris'
+    cams_path += 'paris'
+    name_descriptors = 'paris_' + 'fusion_' + str(num_classes) + '_th_' + str(thresh_cam)
+    num_images = 6392
+
+    if save_regions_for_pca:
+        regions_for_pca_save_path = '/imatge/ajimenez/work/ITR/paris/descriptors/' + 'regions/' + 'vgg_' + layer + '/' +dim+'/'
+        if local_search:
+            regions_for_pca_save_path += 'ls/'
+        regions_name_wp = 'paris_fusion_' + str(num_classes) + '_wp.h5'
+        regions_name_mp = 'paris_fusion_' + str(num_classes) + '_mp.h5'
+        create_folders(regions_for_pca_save_path)
+
+
+if save_regions_for_pca:
+    print 'Saving regions for PCA...'
+    all_regions_images_wp = np.zeros((num_images * num_classes, num_features), dtype=np.float32)
+    all_regions_images_mp = np.zeros((num_images * num_classes, num_features), dtype=np.float32)
 
 if weight:
-    name_result += '_weigth'
+    name_descriptors += '_weigth'
+
+if pca_on:
+    print 'Computing PCA...'
+    name_descriptors += pca_name
+    pca_dim = 512
+    descriptors = load_data(pca_load_path)
+    pca_matrix = PCA(n_components=pca_dim, whiten=True)
+    pca_matrix.fit(descriptors)
+else:
+    pca_matrix = ''
 
 if max_pooling:
-    mp_name_result = name_result + '_mp.h5'
+    mp_name_result = name_descriptors + '_mp.h5'
 
-wp_name_result = name_result + '_wp.h5'
+wp_name_result = name_descriptors + '_wp.h5'
 
+
+print 'Dataset: ', dataset
+print 'Image Dimensions: ', dim
+print 'Num images = ', num_images
+print 'Num Class Activation Maps = ', num_classes
+print 'Local Search: ', local_search
+sys.stdout.flush()
 
 print 'Beginning Descriptor Extraction: '
 print 'Weighted sum pooling: ' + wp_name_result
@@ -39,111 +148,187 @@ if max_pooling:
     print 'Max pooling: ' + mp_name_result
 sys.stdout.flush()
 
-# Beginning
+wsp_descriptors = np.zeros((num_images, num_features), dtype=np.float32)
+wmp_descriptors = np.zeros((num_images, num_features), dtype=np.float32)
 
-masks, features, scores = cu.load_cams(cam_path, num_classes)
+tt = time.time()
 
-num_samples = features.shape[0]
-num_features = features.shape[1]
+batch_size = batchsize_h
 
-wp_image_representations = np.zeros((num_samples, num_features), dtype=np.float32)
-wp_regions = np.zeros((num_features, num_classes), dtype=np.float32)
-
-if max_pooling:
-    mp_regions = np.zeros((num_features, num_classes), dtype=np.float32)
-    mp_image_representations = np.zeros((num_samples, num_features), dtype=np.float32)
-
-
-if weight:
-    # All scores sum 1
-    if num_classes < 205:
-        for i in range(num_samples):
-            scores[i] *= 1/sum(scores[i])
-
-if thresh_cam > 0:
-    for i in range(0,num_samples):
-        for k in range(0,num_classes):
-            masks[i][k][np.where(masks[i][k] < thresh_cam)] = 0
-
-
-
-if pca_on:
-    all_regions_images = np.zeros((num_samples*num_classes, num_features), dtype=np.float32)
-    img_pca = np.zeros((num_samples, pca_dim), dtype=np.float32)
-
-print 'Num samples = ', num_samples
-print 'Num feature maps = ', num_features
-print 'Num regions = ', num_classes
-sys.stdout.flush()
-
-t = time.time()
-for i in range(0, num_samples):
-    print 'Image: ', i
+# Horizontal Images
+print 'Horizontal Images...'
+for n in range(0, n_chunks_h):
+    print 'Chunk number ', n
     sys.stdout.flush()
-    for f in range(0, num_features):
-        for k in range(0, num_classes):
-            # For each region compute avg weighted sum of activations and l2 normalize
-            if max_pooling:
-                mp_regions[f, k] = np.amax(np.multiply(features[i, f], masks[i, k]))
 
-            wp_regions[f, k] = np.multiply(features[i, f], masks[i, k]).sum()
+    if FUSION:
+        cams = cu.load_cams(cams_path + '_h_' + str(n)+'.h5', num_classes, 'cams')
+        features = load_data(feat_path + '_h_' + str(n)+'.h5')
+    else:
+        cams, features, scores = cu.load_cams(cams_path + '_h_' + str(n)+'.h5', num_classes)
+    b_s = features.shape[0]
 
-    #regions [1024, num_classes]
-    wp_regions /= np.linalg.norm(wp_regions, axis=0)
-    if max_pooling:
-        mp_regions /= np.linalg.norm(mp_regions, axis=0)
+    if thresh_cam > 0:
+        for i in range(0, b_s):
+            for k in range(0, num_classes):
+                  cams[i][k][np.where(cams[i][k] < thresh_cam)] = 0
 
-    if weight:
-        print scores[i,0:2]
-        print wp_regions[0:2,0:2]
-        wp_regions *= scores[i]
-        print wp_regions[0:2,0:2]
-        if max_pooling:
-            mp_regions *= scores[i]
+    ind_1 = n * batch_size
+    ind_2 = batch_size * (n + 1)
 
-    if pca_on:
-        # all [5063*numclasses, 1024]
-        all_regions_images[i*num_classes:num_classes*(i+1)] = np.transpose(regions)
+    if n == n_chunks_h - 1:
+        if save_regions_for_pca and max_pooling:
+            wsp_descriptors[ind_1:ind_1+b_s], wmp_descriptors[ind_1:ind_1+b_s], wpr, mpr = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+            all_regions_images_wp[ind_1 * num_classes:num_classes * (ind_1+b_s)] = wpr
+            all_regions_images_mp[ind_1 * num_classes:num_classes * (ind_1+b_s)] = mpr
+
+        elif max_pooling:
+            wsp_descriptors[ind_1:ind_1 + b_s], wmp_descriptors[ind_1:ind_1 + b_s] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+        else:
+            wsp_descriptors[ind_1:ind_1 + b_s] = \
+                 weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
 
     else:
-        wp_image_representations[i] = wp_regions.sum(axis=1)
-        wp_image_representations[i] /= np.linalg.norm(wp_image_representations[i])
-        if max_pooling:
-            mp_image_representations[i] = mp_regions.sum(axis=1)
-            mp_image_representations[i] /= np.linalg.norm(mp_image_representations[i])
+        if save_regions_for_pca and max_pooling:
+            wsp_descriptors[ind_1:ind_2], wmp_descriptors[ind_1:ind_2], wpr, mpr = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
 
-print 'Time elapsed computing R-MAC: ', time.time() - t
-print wp_image_representations.shape
-sys.stdout.flush()
+            all_regions_images_wp[ind_1 * num_classes:num_classes * ind_2] = wpr
+            all_regions_images_mp[ind_1 * num_classes:num_classes * ind_2] = mpr
 
+        elif max_pooling:
+            wsp_descriptors[ind_1:ind_2], wmp_descriptors[ind_1:ind_2] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
 
-if pca_on:
-    t1 = time.time()
-    print 'Applying PCA with dimension reduction to: ', pca_dim
-    sys.stdout.flush()
-    pca = PCA(n_components=pca_dim, whiten=True)
-    images_pca = pca.fit_transform(all_regions_images)
-    print 'PCA finished!'
-    print 'Time elapsed computing PCA: ', time.time() - t1
-    print images_pca.shape
-    print 'Normalizing...'
-    images_pca /= np.linalg.norm(images_pca, axis=1)[:,None]
-    sys.stdout.flush()
-    for i in range(0, num_samples):
-        if num_classes > 1:
-            img_pca[i] = images_pca[i*num_classes:num_classes*(i+1)].sum(axis=0)
-            img_pca[i] /= np.linalg.norm(img_pca[i])
         else:
-            img_pca[i] = images_pca[i]
+            wsp_descriptors[ind_1:ind_2] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
 
-    cu.save_data(img_pca, results_path, name_result)
+# Position of the vector images
+last_h = ind_1+b_s
+
+# Vertical Images
+
+print 'Vertical Images...'
+for n in range(0, n_chunks_v):
+    print 'Chunk number ', n
+    sys.stdout.flush()
+    if FUSION:
+        cams = cu.load_cams(cams_path + '_v_' + str(n) + '.h5', num_classes, 'cams')
+        features = load_data(feat_path + '_v_' + str(n) + '.h5')
+    else:
+        cams, features, scores = cu.load_cams(cams_path + '_v_' + str(n) + '.h5', num_classes)
+    b_s = features.shape[0]
+
+    if thresh_cam > 0:
+        for i in range(0, b_s):
+            for k in range(0, num_classes):
+                  cams[i][k][np.where(cams[i][k] < thresh_cam)] = 0
+
+    ind_1 = last_h + n * batch_size
+    ind_2 = last_h + batch_size * (n + 1)
+
+    if n == n_chunks_v - 1:
+        if save_regions_for_pca and max_pooling:
+            wsp_descriptors[ind_1:ind_1 + b_s], wmp_descriptors[ind_1:ind_1 + b_s], wpr, mpr = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+            all_regions_images_wp[ind_1 * num_classes:num_classes * (ind_1 + b_s)] = wpr
+            all_regions_images_mp[ind_1 * num_classes:num_classes * (ind_1 + b_s)] = mpr
+
+        elif max_pooling:
+            wsp_descriptors[ind_1:ind_1 + b_s], wmp_descriptors[ind_1:ind_1 + b_s] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+        else:
+            wsp_descriptors[ind_1:ind_1 + b_s] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+    else:
+        if save_regions_for_pca and max_pooling:
+            wsp_descriptors[ind_1:ind_2], wmp_descriptors[ind_1:ind_2], wpr, mpr = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+            all_regions_images_wp[ind_1 * num_classes:num_classes * ind_2] = wpr
+            all_regions_images_mp[ind_1 * num_classes:num_classes * ind_2] = mpr
+
+        elif max_pooling:
+            wsp_descriptors[ind_1:ind_2], wmp_descriptors[ind_1:ind_2] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+        else:
+            wsp_descriptors[ind_1:ind_2] = \
+                weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+# Position of the vector images
+last_v = ind_1 + b_s
+
+print last_v
+print 'Queries horizontal...'
+
+# Queries Horizontal
+if FUSION:
+    cams = cu.load_cams(h_query_cams, num_classes, 'cams')
+    features = load_data(h_query_feat)
+else:
+    cams, features, scores = cu.load_cams(h_query_cams, num_classes)
+
+b_s = features.shape[0]
+print b_s
+
+if save_regions_for_pca and max_pooling:
+    wsp_descriptors[last_v:last_v + b_s], wmp_descriptors[last_v:last_v + b_s], wpr, mpr = \
+        weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+    all_regions_images_wp[last_v * num_classes:num_classes * (last_v + b_s)] = wpr
+    all_regions_images_mp[last_v * num_classes:num_classes * (last_v + b_s)] = mpr
+
+elif max_pooling:
+    wsp_descriptors[last_v:last_v + b_s], wmp_descriptors[last_v:last_v + b_s] = \
+        weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
 
 else:
-    cu.save_data(wp_image_representations, results_path, wp_name_result)
-    if max_pooling:
-        cu.save_data(mp_image_representations, results_path, mp_name_result)
-print 'Total time elapsed: ', time.time()-t
+    wsp_descriptors[last_v:last_v + b_s] = \
+        weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
 
+last = last_v + b_s
 
+# Queries Vertical
+print 'Queries vertical...'
 
+if FUSION:
+    cams = cu.load_cams(v_query_cams, num_classes, 'cams')
+    features = load_data(v_query_feat)
+else:
+    cams, features, scores = cu.load_cams(v_query_cams, num_classes)
 
+b_s = features.shape[0]
+
+if save_regions_for_pca and max_pooling:
+    wsp_descriptors[last:last + b_s], wmp_descriptors[last:last + b_s], wpr, mpr = \
+        weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+    all_regions_images_wp[last * num_classes:num_classes * (last + b_s)] = wpr
+    all_regions_images_mp[last * num_classes:num_classes * (last + b_s)] = mpr
+
+elif max_pooling:
+    wsp_descriptors[last:last + b_s], wmp_descriptors[last:last + b_s] = \
+        weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+else:
+    wsp_descriptors[last:last + b_s] = \
+        weighted_pooling(features, cams, max_pooling, save_regions_for_pca, pca_matrix)
+
+print 'Total time elapsed: ', time.time() - tt
+
+save_data(wsp_descriptors, path_descriptors, wp_name_result)
+
+if save_regions_for_pca:
+    save_data(all_regions_images_wp, regions_for_pca_save_path, regions_name_wp)
+    save_data(all_regions_images_mp, regions_for_pca_save_path, regions_name_mp)
+
+if max_pooling:
+    save_data(wmp_descriptors, path_descriptors, mp_name_result)
