@@ -13,3 +13,17 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 ## Usage
 
 ## Aknowledgements
+We would like to specially thank Albert Gil Moreno and Josep Pujal from our technical support team at the Image Processing Group at UPC.
+
+| ![AlbertGil-photo]  | ![JosepPujal-photo]  |
+|:-:|:-:|
+| [Albert Gil](AlbertGil-web)  |  [Josep Pujal](JosepPujal-web) |
+
+[AlbertGil-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/AlbertGil.jpg "Albert Gil"
+[JosepPujal-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/JosepPujal.jpg "Josep Pujal"
+
+[AlbertGil-web]: https://imatge.upc.edu/web/people/albert-gil-moreno
+[JosepPujal-web]: https://imatge.upc.edu/web/people/josep-pujal
+
+|   |   |
+|:--|:-:|
