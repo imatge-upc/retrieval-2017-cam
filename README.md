@@ -13,7 +13,7 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 ## Usage
 
 ## Aknowledgements
-We would like to specially thank Albert Gil Moreno and Josep Pujal from our technical support team at the Image Processing Group at UPC.
+We would like to specially thank Albert Gil and Josep Pujal from our technical support team at the Image Processing Group at UPC.
 
 | ![AlbertGil-photo]  | ![JosepPujal-photo]  |
 |:-:|:-:|
@@ -25,5 +25,5 @@ We would like to specially thank Albert Gil Moreno and Josep Pujal from our tech
 [AlbertGil-web]: https://imatge.upc.edu/web/people/albert-gil-moreno
 [JosepPujal-web]: https://imatge.upc.edu/web/people/josep-pujal
 
-|   |   |
-|:--|:-:|
+## Contact
+
