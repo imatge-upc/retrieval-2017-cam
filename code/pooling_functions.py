@@ -3,7 +3,7 @@ import numpy as np
 import time
 from sklearn.decomposition import PCA
 import sys
-import utils_datasets as ud
+import utils as ud
 import time
 from crow import compute_crow_channel_weight
 
@@ -217,7 +217,7 @@ def descriptor_aggregation(descriptors_cams, num_images, num_classes, pca=None):
         index = num_classes_ori + index
         if i == 0:
             index = 0
-        if pca != '':
+        if pca is not None:
             for k in range(index, index+num_classes):
                 descriptors_pca[k] /= np.linalg.norm(descriptors_pca[k])
                 descriptors[i] += descriptors_pca[k]

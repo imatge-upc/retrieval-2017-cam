@@ -5,7 +5,6 @@ import cv2
 import os
 import sys
 import h5py
-import utils_oxford as uf
 import numpy as np
 import time
 import math

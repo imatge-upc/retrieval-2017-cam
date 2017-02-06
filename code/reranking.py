@@ -6,7 +6,7 @@ import evaluate_oxford_paris as eval
 import utils as utils
 import time
 from vgg_cam import VGGCAM
-from utils_datasets import create_folders, save_data, preprocess_images, preprocess_query, load_data
+from utils import create_folders, save_data, preprocess_images, preprocess_query, load_data
 from pooling_functions import weighted_cam_pooling, descriptor_aggregation
 from cam_utils import extract_feat_cam
 from scipy.misc import imread

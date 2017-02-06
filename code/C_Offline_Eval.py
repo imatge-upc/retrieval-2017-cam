@@ -3,7 +3,7 @@ import os
 import h5py
 import sys
 import evaluate_oxford_paris as eval
-import utils_datasets as utils
+import utils as utils
 import time
 from vgg_cam import VGGCAM
 from cam_utils import extract_feat_cam
