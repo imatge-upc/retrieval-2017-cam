@@ -14,12 +14,14 @@ import os
 
 
 def VGGCAM(nb_classes, input_shape, num_input_channels=1024, bounding_box=None):
-    """
-    Build Convolution Neural Network
-    args : nb_classes (int) number of classes
-    returns : model (keras NN) the Neural Net model
-    """
-
+    '''
+    :param nb_classes: # classes (IMAGENET = 1000)
+    :param input_shape: image shape
+    :param num_input_channels: channels CAM layer
+    :param bounding_box:  Query processing (Oxford/Paris)
+    :return: instance of the model VGG-16 CAM
+    '''
+  
     model = Sequential()
     model.add(ZeroPadding2D((1, 1), input_shape=input_shape))
     model.add(Convolution2D(64, 3, 3, activation='relu'))
@@ -66,6 +68,7 @@ def VGGCAM(nb_classes, input_shape, num_input_channels=1024, bounding_box=None):
         # Add the W layer
         model.add(Dense(nb_classes, activation='softmax'))
     else:
+        # For processing query bounding boxes (TO BE DONE...)
         print 'bounding box: ', bounding_box
         x, y, dx, dy = bounding_box[0], bounding_box[1], bounding_box[2], bounding_box[3]
 
@@ -99,6 +102,6 @@ def VGGCAM(nb_classes, input_shape, num_input_channels=1024, bounding_box=None):
         print'5'
 
     model.name = "VGGCAM"
-    print'6'
+
     return model
 

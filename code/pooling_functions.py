@@ -8,10 +8,10 @@ import time
 from crow import compute_crow_channel_weight
 
 
-def compute_PCA(descriptors, whiten=True):
+def compute_pca(descriptors, pca_dim=512, whiten=True):
     print descriptors.shape
     t1 = time.time()
-    print 'Applying PCA with dimension reduction to: ', pca_dim
+    print 'Computing PCA with dimension reduction to: ', pca_dim
     sys.stdout.flush()
     pca = PCA(n_components=pca_dim, whiten=whiten)
     pca.fit(descriptors)
@@ -50,7 +50,7 @@ def max_pooling(features):
 
 
 # Do complete aggregation, class vectors + aggregation
-def weighted_pooling(features, cams, max_pool=False, region_descriptors=False, pca='', q=False):
+def weighted_pooling(features, cams, max_pool=False, region_descriptors=False, pca=None, q=False):
     t = time.time()
     num_samples = features.shape[0]
     num_features = features.shape[1]
@@ -102,7 +102,7 @@ def weighted_pooling(features, cams, max_pool=False, region_descriptors=False, p
             if max_pool:
                 wmp_descriptors_reg[num_classes*i:num_classes*(i+1)] = np.transpose(mp_regions)
 
-        if pca != '':
+        if pca is not None:
             wp_regions = np.transpose(pca.transform(np.transpose(wp_regions)))
             wp_regions /= np.linalg.norm(wp_regions, axis=0)
             mp_regions = np.transpose(pca.transform(np.transpose(mp_regions)))
@@ -133,7 +133,7 @@ def weighted_pooling(features, cams, max_pool=False, region_descriptors=False, p
 
 
 # Return class vectors (1 per class)
-def weighted_cam_pooling(features, cams, max_pool=True, channel_weights=True):
+def weighted_cam_pooling(features, cams, max_pool=False, channel_weights=True):
     '''
     :param features: Feature Maps
     :param cams: Class Activation Maps
@@ -179,7 +179,7 @@ def weighted_cam_pooling(features, cams, max_pool=True, channel_weights=True):
         if max_pool:
             wmp_descriptors_reg[num_classes*i:num_classes*(i+1)] = np.transpose(mp_regions)
 
-    print 'Time elapsed computing image representations for the batch: ', time.time() - t
+    #print 'Time elapsed computing image representations for the batch: ', time.time() - t
 
     if max_pool:
         return wsp_descriptors_reg, wmp_descriptors_reg
@@ -188,12 +188,13 @@ def weighted_cam_pooling(features, cams, max_pool=True, channel_weights=True):
 
 
 # General Descriptor Aggregation : PCA + Aggregation
-def descriptor_aggregation(descriptors_cams, num_images, num_classes, pca=''):
+def descriptor_aggregation(descriptors_cams, num_images, num_classes, pca=None):
 
     num_classes_ori = descriptors_cams.shape[0] / num_images
     descriptors = np.zeros((num_images, descriptors_cams.shape[1]), dtype=np.float32)
 
-    if pca != '':
+    if pca is not None:
+        # Sometimes we may have errors during re-ranking due to bounding box generation on places where CAM=0
         try:
             descriptors_pca = pca.transform(descriptors_cams)
         except:

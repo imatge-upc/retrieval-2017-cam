@@ -3,16 +3,15 @@ import os
 import h5py
 import sys
 import evaluate_oxford_paris as eval
-import utils_datasets as utils
+import utils as utils
 import time
-from sklearn.decomposition import PCA
 from vgg_cam import VGGCAM
 from utils_datasets import create_folders, save_data, preprocess_images, preprocess_query, load_data
 from pooling_functions import weighted_cam_pooling, descriptor_aggregation
 from cam_utils import extract_feat_cam
 from scipy.misc import imread
 import math
-from sklearn.metrics.pairwise import cosine_similarity
+
 
 size_v = [720, 1024]
 size_h = [1024, 720]
@@ -70,23 +69,23 @@ def compute_score_sliding(features_query, features_img, pooling='sum'):
 
 # Compute score using CAMs, PCA , Region of interest
 def compute_scores_cams(desc_query, features_img, cams, roi, pca_matrix):
-    print 'Feat shape:', features_img.shape
-    print 'Cams shape', cams.shape
+    #print 'Feat shape:', features_img.shape
+    #print 'Cams shape', cams.shape
     nthres = 4
     scores = np.zeros(features_img.shape[0])
     feats = np.zeros((1, features_img.shape[1], features_img.shape[2], features_img.shape[3]), dtype=np.float32)
     cams_ = np.zeros((1, cams.shape[1], cams.shape[2], cams.shape[3]), dtype=np.float32)
-    final_descriptors = np.zeros((features_img.shape[0],features_img.shape[1]), dtype=np.float32)
+    final_descriptors = np.zeros((features_img.shape[0], features_img.shape[1]), dtype=np.float32)
     for img_ind in range(features_img.shape[0]):
-        print features_img[img_ind].shape
+        #print features_img[img_ind].shape
         feats[0] = features_img[img_ind]
         cams_[0] = cams[img_ind]
         scores[img_ind] = -10
-        print 'Img: ', img_ind
+        #print 'Img: ', img_ind
         x, y, w, h = roi[img_ind, :, 0], roi[img_ind, :, 1], roi[img_ind, :, 2], roi[img_ind, :, 3]
         for th in range(0, nthres):
-            print y[th], y[th] + h[th]
-            print x[th], x[th] + w[th]
+            #print y[th], y[th] + h[th]
+            #print x[th], x[th] + w[th]
             sys.stdout.flush()
             if h[th] >= 5 and w[th] >= 5:
                 d_wp = weighted_cam_pooling(feats[:, :,y[th]:y[th]+h[th], x[th]:x[th]+w[th]],
@@ -95,10 +94,10 @@ def compute_scores_cams(desc_query, features_img, cams, roi, pca_matrix):
 
                 score_aux = np.dot(desc_query, np.transpose(descriptor))
 
-                print 'Thresh: ', th
-                print 'Score:', score_aux
+                #print 'Thresh: ', th
+                #print 'Score:', score_aux
                 if score_aux > scores[img_ind]:
-                    print 'Max in th:', th
+                    #print 'Max in th:', th
                     scores[img_ind] = np.copy(score_aux)
                     final_descriptors[img_ind] = descriptor
             else:
@@ -106,6 +105,7 @@ def compute_scores_cams(desc_query, features_img, cams, roi, pca_matrix):
     return scores, final_descriptors
 
 
+# Only with CAM wighting
 def compute_scores_cams_only(fmax_q, features_img, cams, pca_matrix):
     print 'Feat shape:', features_img.shape
     print 'Cams shape', cams.shape
@@ -129,6 +129,7 @@ def compute_scores_cams_only(fmax_q, features_img, cams, pca_matrix):
     return scores
 
 
+# Raw descriptors
 def compute_scores_roi(fmax_q, features_img, roi, pca_matrix):
     print 'Feat shape:', features_img.shape
     nthres = 5
@@ -177,19 +178,24 @@ def re_order(order, vector_h, vector_v):
 
 
 def re_ranking(desc_query, class_list, image_names, indices, dataset, top_n_ranking, pca_matrix, model_h, model_v):
-    if dataset == 'Oxford':
+    if dataset == 'Oxford' or dataset == 'Oxford105k':
         images_path = '/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/'
 
-    elif dataset == 'Paris':
+    if dataset == 'Paris' or dataset == 'Paris106k':
         images_path = '/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris/'
 
     index_q = indices[0:top_n_ranking]
     tt = time.time()
     indexed_names = list()
     i = 0
+    if top_n_ranking >= 1000:
+        image_batch = 300
+    else:
+        image_batch = top_n_ranking
+
     batch_size = 12
-    n_batches = int(math.floor(top_n_ranking / batch_size))
-    last_batch = top_n_ranking % batch_size
+    n_iterations = int(math.floor(top_n_ranking / image_batch))
+    last_batch = top_n_ranking % image_batch
     scores = np.zeros(top_n_ranking, dtype=np.float32)
     scores_h = np.zeros(top_n_ranking, dtype=np.float32)
     scores_v = np.zeros(top_n_ranking, dtype=np.float32)
@@ -201,66 +207,64 @@ def re_ranking(desc_query, class_list, image_names, indices, dataset, top_n_rank
 
     num_cams = class_list.shape[0]
 
-    for k in range(0, n_batches+1):
-        x_2_h = np.zeros((0, 3, size_h[1], size_h[0]), dtype=np.float32)
-        x_2_v = np.zeros((0, 3, size_v[1], size_v[0]), dtype=np.float32)
-        xx_2_v = np.zeros((1, 3, size_v[1], size_v[0]), dtype=np.float32)
-        xx_2_h = np.zeros((1, 3, size_h[1], size_h[0]), dtype=np.float32)
+    for k in range(0, n_iterations+1):
+        images_h = list()
+        images_v = list()
+        images_ver = False
+        images_hor = False
         t1 = time.time()
-        if k == n_batches:
+        if k == n_iterations:
             #Last Batch
             if last_batch != 0:
-                last_ind = batch_size * k + last_batch
+                last_ind = image_batch * k + last_batch
             else:
                 break
         else:
-            last_ind = batch_size * (k+1)
+            last_ind = image_batch * (k+1)
 
-        print image_names[index_q[k*batch_size:last_ind]]
+        print image_names[index_q[k*image_batch:last_ind]]
 
         # Separate the images in Horizontal/Vertical for faster processing
         image_order = list()
-        for ind_im, name in enumerate(image_names[index_q[k*batch_size:last_ind]]):
-            im = imread(images_path + name.replace('\n', '') + '.jpg')
+        for ind_im, name in enumerate(image_names[index_q[k*image_batch:last_ind]]):
+            if name[0] == '/':
+                im = imread(name.replace('\n',''))
+            else:
+                im = imread(images_path + name.replace('\n', '') + '.jpg')
             if im.shape[0] >= im.shape[1]:
-                size = size_v
-                xx_2_v[0] = preprocess_query(im, size[0], size[1], mean_value)
-                x_2_v = np.concatenate((x_2_v, xx_2_v))
+                images_v.append(im)
+                images_ver = True
                 image_order.append(1)
             else:
-                size = size_h
-                xx_2_h[0] = preprocess_query(im, size[0], size[1], mean_value)
-                x_2_h = np.concatenate((x_2_h, xx_2_h))
+                images_h.append(im)
+                images_hor = True
                 image_order.append(0)
 
         # Extract Features/CAMs
         print 'Time loading images: ', time.time() - t1
-        if x_2_h.shape[0] > 0:
+
+        if images_hor:
+            size = size_h
             t2 = time.time()
-            features_h, cams_h, roi_h = extract_feat_cam(model_h, layer, batch_size, x_2_h, num_cams,
+            images_h_prep = preprocess_images(images_h, size[0], size[1], mean_value)
+            features_h, cams_h, roi_h = extract_feat_cam(model_h, layer, batch_size, images_h_prep, num_cams,
                                                          class_list, roi=True)
-            #features_h, cams_h, roi_h = extract_feat_cam(model_h, layer, batch_size, x_2_h, num_cams)
             print 'Time extracting features: ', time.time() - t2
             t3 = time.time()
-            #scores_h = compute_scores_cams_only(f_max, features_h, cams_h, pca_matrix)
             scores_h, final_desc_h = compute_scores_cams(desc_query, features_h, cams_h, roi_h, pca_matrix)
-            #scores_h = compute_scores_roi(f_max, features_h, roi_h, pca_matrix)
-            #scores_h = compute_score_sliding(f_query, features_h)
             print 'Time computing scores: ', time.time() - t3
             print scores_h
 
-        if x_2_v.shape[0] > 0:
+        if images_ver:
+            size = size_v
             t2 = time.time()
-            features_v, cams_v, roi_v = extract_feat_cam(model_v, layer, batch_size, x_2_v, num_cams,
+            images_v_prep = preprocess_images(images_v, size[0], size[1], mean_value)
+            features_v, cams_v, roi_v = extract_feat_cam(model_v, layer, batch_size, images_v_prep, num_cams,
                                                          class_list, roi=True)
             print 'Time extracting features: ', time.time() - t2
-            #features_v, cams_v, roi_v = extract_feat_cam(model_v, layer, batch_size, x_2_v, num_cams)
 
             t3 = time.time()
-            #scores_v = compute_scores_cams_only(f_max, features_v, cams_v, pca_matrix)
             scores_v, final_desc_v = compute_scores_cams(desc_query, features_v, cams_v, roi_v, pca_matrix)
-            #scores_v = compute_scores_roi(f_max, features_v, roi_v, pca_matrix)
-            #scores_v = compute_score_sliding(f_query, features_v)
             print 'Time computing scores: ', time.time() - t3
             print scores_v
 
@@ -268,11 +272,11 @@ def re_ranking(desc_query, class_list, image_names, indices, dataset, top_n_rank
         # Compute Scores
         print image_order
         # Re-order
-        scores[k*batch_size:last_ind] = re_order(image_order, scores_h, scores_v)
-        final_descriptors_all[k*batch_size:last_ind] = re_order(image_order, final_desc_h, final_desc_v)
+        scores[k*image_batch:last_ind] = re_order(image_order, scores_h, scores_v)
+        final_descriptors_all[k*image_batch:last_ind] = re_order(image_order, final_desc_h, final_desc_v)
         print final_descriptors_all.shape
 
-        print scores[k*batch_size:batch_size*(k+1)]
+        print scores[k*image_batch:image_batch*(k+1)]
         print 'Time loading computing scores: ', time.time() - t2
         print 'Time elapsed x image:', time.time() - t1
 

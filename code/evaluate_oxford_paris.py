@@ -9,6 +9,7 @@ from scipy.misc import imread, imresize, imsave
 import matplotlib.pyplot as plt
 import time
 
+
 # Query Expansion
 def expand_query(n_expand, data, indices):
     ind_data = indices[0:n_expand]
@@ -17,6 +18,7 @@ def expand_query(n_expand, data, indices):
     for ind in ind_data:
         desc += data[ind]
     desc = desc / n_expand
+    desc = desc.reshape((1, desc.shape[0]))
     return desc
 
 
@@ -41,13 +43,9 @@ def save_ranking_one_query(data, query_desc, image_names, path, image_name):
             data_aux = data[i].copy()
             data[i] = query_desc
             data_local = data
-            t_t = time.time()
-            #distances, indices = compute_distances(data, image_names.shape[0])
-            #print distances[i]
-            #print 'neighbors: ', time.time()-t_t
             t_o = time.time()
             distances, indices = compute_distances_optim(query_desc, data)
-            print 'New: ', time.time() - t_o
+            print 'Time computing distances: ', time.time() - t_o
             file = open(path + image_names[i].replace('\n', '') + '.txt', 'w')
             for ind in indices:
                 file.write(image_names[ind])
@@ -86,15 +84,13 @@ def compute_distances(data, neighbors):
     return distances, indices
 
 
-# Compute distances and get list of indices
+# Compute distances and get list of indices (dot product --> Faster)
 def compute_distances_optim(desc, data):
     print('Computing distances...')
     print desc.shape
     print data.shape
-    print np.transpose(data).shape
     dist = np.dot(desc, np.transpose(data))
     ind = dist[0].argsort()[::-1]
-    sys.stdout.flush()
     return dist[0], ind
 
 

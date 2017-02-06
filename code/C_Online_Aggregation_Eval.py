@@ -3,32 +3,24 @@ import os
 import h5py
 import sys
 import evaluate_oxford_paris as eval
-import utils_datasets as utils
+import utils as utils
 import time
-from sklearn.decomposition import PCA
 from vgg_cam import VGGCAM
 from utils_datasets import create_folders, save_data, preprocess_images, preprocess_query, load_data
-from pooling_functions import weighted_cam_pooling, descriptor_aggregation, retrieve_n_descriptors, descriptor_aggregation_cl
+from pooling_functions import weighted_cam_pooling, descriptor_aggregation, retrieve_n_descriptors, \
+    descriptor_aggregation_cl, compute_pca
 from cam_utils import extract_feat_cam
 from scipy.misc import imread
 import math
-from crow import compute_crow_channel_weight
 import pickle
 from reranking import re_ranking
-
-imagenet_dictionary = pickle.load(open("/imatge/ajimenez/work/ITR/imagenet1000_clsid_to_human.pkl", "rb"))
 
 
 def print_classes(dictionary_labels, vector_classes):
     for vc in vector_classes:
         print dictionary_labels[vc]
 
-
-def load_specific_descriptors(list_classes, img_names, path_descriptors):
-    name_file = path_descriptors + img_names+'.h5'
-    with h5py.File(name_file, 'r') as hf:
-        descriptors = np.array(hf.get('data'))
-    return descriptors[list_classes]
+imagenet_dictionary = pickle.load(open("/imatge/ajimenez/work/ITR/imagenet1000_clsid_to_human.pkl", "rb"))
 
 # Parameters to set
 
@@ -39,47 +31,52 @@ n_images_paris = 6392
 n_queries = 55
 
 # Network Parameters
+model_name = 'vgg_16_CAM_imagenet'
 nb_classes = 1000
 VGGCAM_weight_path = '/imatge/ajimenez/work/ITR/models/vgg_cam_weights.h5'
-model_name = 'vgg_16_CAM_imagenet'
 layer = 'relu5_1'
 batch_size = 10
 
-# Search Mode 6654 7831
+# Search Mode
 local_search = True
 
 # Query Expansion
 query_expansion = False
-n_expand = 10
+n_expand = 5
 
 # Re-ranking
 do_re_ranking = False
+top_n_ranking = 1000
 
 # Descriptors for Re-ranking / Local Search
+
+# Image Pre-Processing
 dim = '1024x720'
 size_v = [720, 1024]
 size_h = [1024, 720]
 mean_value = [123.68, 116.779, 103.939]
 
+descriptors_dim = 512
+
+# PCA Application
 apply_pca = True
+pca_dim = 512
 num_classes_pca = 1
 num_cams = 6
-
-
-top_n_ranking = 100
-
 
 print 'Dataset: ', dataset
 print 'Num_cams ', num_cams
 print 'PCA with ', num_classes_pca
-print 'Q expansion ', n_expand
+if do_re_ranking:
+    print 'Re-Ranking the top  ', top_n_ranking
+if query_expansion:
+    print 'Query Expansion = ', n_expand
 
-LOAD = False
 
 if dataset == 'Oxford':
     image_path_oxford = '/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/'
-    ranking_path = '/imatge/ajimenez/work/ITR/oxford/results/' + model_name + '/' + layer + '/' + dim + '/assdad'+\
-                   str(top_n_ranking)+str(n_expand)+'/'
+    ranking_path = '/imatge/ajimenez/work/ITR/oxford/results/' + model_name + '/' + layer + '/' + dim + '/R' +\
+                   str(top_n_ranking) + 'QE' + str(n_expand)+'/'
     ranking_image_names_list = '/imatge/ajimenez/work/ITR/oxford/lists/list_oxford_rank.txt'
     utils.create_folders(ranking_path)
 
@@ -99,7 +96,6 @@ if dataset == 'Oxford':
         for line in f:
             image_names.append(line)
     image_names = np.array(image_names)
-
 
     sys.stdout.flush()
 
@@ -121,15 +117,11 @@ if dataset == 'Oxford':
     if apply_pca:
         pca_dim = 512
         pca_desc = retrieve_n_descriptors(num_classes_pca, n_images_paris, load_data(pca_descriptors_path))
-        print 'Computing PCA...'
-        print pca_desc.shape
-        pca_matrix = PCA(n_components=pca_dim, whiten=True)
-        pca_matrix.fit(pca_desc)
-        print 'PCA matrix shape:', pca_matrix.components_.shape
+        pca_matrix = compute_pca(pca_desc, pca_dim=pca_dim)
         data = np.zeros((n_images_oxford, pca_dim))
         print 'Data shape: ', data.shape
     else:
-        pca_matrix = ''
+        pca_matrix = None
 
     descriptors = np.zeros((nb_classes*n_images_oxford, 512), dtype=np.float32)
     for index, img_n in enumerate(image_names):
@@ -138,6 +130,7 @@ if dataset == 'Oxford':
     print descriptors.shape
 
     tcomp = time.time()
+
     for query_name in query_names:
         print count
         for i in range(1, 6):
@@ -150,8 +143,10 @@ if dataset == 'Oxford':
             img = imread(image_path_oxford + f_list[0] + '.jpg')
             print 'Image Shape: ' + str(img.shape[0]) + 'x' + str(img.shape[1])
 
+            # Queries bounding box
             x, y, dx, dy = f_list[1], f_list[2], f_list[3], f_list[4]
 
+            # Feature Maps bounding box
             f_x, f_y, f_dx, f_dy = int((x - (x % 16)) / 16), int((y - (y % 16)) / 16), \
                                    int((dx - (dx % 16)) / 16), int((dy - (dy % 16)) / 16)
 
@@ -192,48 +187,43 @@ if dataset == 'Oxford':
                 print class_list[0]
                 #print_classes(imagenet_dictionary, class_list[0])
 
-            if LOAD:
-                desc = load_data(ls_desc_path + f_list[0] + '.h5')
-            else:
-                if img.shape[0] > img.shape[1]:
-                    size = size_v
-                    img_p = preprocess_query(img, size[0], size[1], mean_value)
-                    x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
-                    x_features[0, :, :, :] = img_p
-                    if local_search:
-                        features, cams, roi = extract_feat_cam(model_v, layer, 1, x_features,
-                                                            num_cams, class_list[0, 0:num_cams], roi=True)
-                    else:
-                        features, cams, class_list = extract_feat_cam(model_v, layer, 1, x_features, num_cams)
-
-                else:
-                    size = size_h
-                    img_p = preprocess_query(img, size[0], size[1], mean_value)
-                    x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
-                    x_features[0, :, :, :] = img_p
-                    if local_search:
-                        features, cams, roi = extract_feat_cam(model_h, layer, 1, x_features,
-                                                               num_cams, class_list[0, 0:num_cams], roi=True)
-                    else:
-                        features, cams, class_list = extract_feat_cam(model_h, layer, 1, x_features, num_cams)
-
+            if img.shape[0] > img.shape[1]:
+                size = size_v
+                img_p = preprocess_query(img, size[0], size[1], mean_value)
+                x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
+                x_features[0, :, :, :] = img_p
                 if local_search:
-                    d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
-                                                cams[:, :, f_y:f_dy, f_x:f_dx], max_pool=False)
+                    features, cams, roi = extract_feat_cam(model_v, layer, 1, x_features,
+                                                        num_cams, class_list[0, 0:num_cams], roi=True)
                 else:
-                    d_wp = weighted_cam_pooling(features, cams, max_pool=False)
+                    features, cams, class_list = extract_feat_cam(model_v, layer, 1, x_features, num_cams)
 
-                #d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
-                #                            cams[:, :, :, :], max_pool=False)
+            else:
+                size = size_h
+                img_p = preprocess_query(img, size[0], size[1], mean_value)
+                x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
+                x_features[0, :, :, :] = img_p
+                if local_search:
+                    features, cams, roi = extract_feat_cam(model_h, layer, 1, x_features,
+                                                           num_cams, class_list[0, 0:num_cams], roi=True)
+                else:
+                    features, cams, class_list = extract_feat_cam(model_h, layer, 1, x_features, num_cams)
 
-                print_classes(imagenet_dictionary, class_list[0])
-                desc = descriptor_aggregation(d_wp, 1, num_cams, pca_matrix)
+            if local_search:
+                d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
+                                            cams[:, :, f_y:f_dy, f_x:f_dx], max_pool=False)
+            else:
+                d_wp = weighted_cam_pooling(features, cams, max_pool=False)
 
-            tagregation=time.time()
+            #d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
+            #                            cams[:, :, :, :], max_pool=False)
+
+            print_classes(imagenet_dictionary, class_list[0])
+            desc = descriptor_aggregation(d_wp, 1, num_cams, pca_matrix)
+
+            tagregation = time.time()
             data = descriptor_aggregation_cl(descriptors, n_images_oxford, pca_matrix, class_list[0])
             print 'Time elapsed agregation: ', time.time() - tagregation
-
-            #save_data(desc, ls_desc_path, f_list[0]+'.h5')
 
             indices_local, data_local = eval.save_ranking_one_query(data, desc, image_names, ranking_path, query_img_name)
 
@@ -254,16 +244,16 @@ if dataset == 'Oxford':
 
     time_ranking = time.time() - tcomp
 
-
     eval.evaluate_oxford(ranking_path, descriptors_name)
-    print 'Time elapsed computing distances: ', time.time() - time_ranking
+    print 'Time elapsed computing distances: ', time_ranking
     print 'Time elapsed total: ', time.time() - t
     #eval.show_images_top(5,dataset)
 
     print 'Evaluated:  ' + descriptors_name
 
 elif dataset == 'Paris':
-    ranking_path = '/imatge/ajimenez/work/ITR/paris/results/' + model_name + '/' + layer + '/' + dim + '/prova_/'
+    ranking_path = '/imatge/ajimenez/work/ITR/paris/results/' + model_name + '/' + layer + '/' + dim + '/R' +\
+                   str(top_n_ranking) + 'QE' + str(n_expand)+'/'
     ranking_image_names_list = '/imatge/ajimenez/work/ITR/paris/lists/list_paris_rank.txt'
     utils.create_folders(ranking_path)
 
@@ -275,14 +265,10 @@ elif dataset == 'Paris':
                            'oxford_all_32_wp.h5'
     image_path_paris = '/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris/'
 
-    ls_desc_path = '/imatge/ajimenez/work/ITR/paris/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/crow/ls/'+ \
-                   str(num_cams)+'_' + 'pca_'+str(num_classes_pca)+'/'
-    utils.create_folders(ls_desc_path)
-
     if local_search:
         ranking_image_names_list = '/imatge/ajimenez/work/ITR/paris/lists/list_paris_rank.txt'
 
-    data = np.zeros((n_images_paris, 512))
+    data = np.zeros((n_images_paris, descriptors_dim))
     print 'Data shape: ', data.shape
     sys.stdout.flush()
 
@@ -315,13 +301,12 @@ elif dataset == 'Paris':
     if apply_pca:
         pca_dim = 512
         pca_desc = retrieve_n_descriptors(num_classes_pca, n_images_oxford, load_data(pca_descriptors_path))
-        print 'Computing PCA...'
         print pca_desc.shape
-        pca_matrix = PCA(n_components=pca_dim, whiten=True)
-        pca_matrix.fit(pca_desc)
-        print 'PCA matrix shape:', pca_matrix.components_.shape
+        pca_matrix = compute_pca(pca_desc, pca_dim=pca_dim)
+        data = np.zeros((n_images_oxford, pca_dim))
+        print 'Data shape: ', data.shape
     else:
-        pca_matrix = ''
+        pca_matrix = None
 
     tcomp = time.time()
     for query_name in query_names:
@@ -361,39 +346,36 @@ elif dataset == 'Paris':
                 print class_list[0]
                 #print_classes(imagenet_dictionary, class_list[0])
 
-            if LOAD:
-                desc = load_data(ls_desc_path + f_list[0] + '.h5')
-            else:
-                if img.shape[0] > img.shape[1]:
-                    size = size_v
-                    img_p = preprocess_query(img, size[0], size[1], mean_value)
-                    x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
-                    x_features[0, :, :, :] = img_p
-                    if local_search:
-                        features, cams, roi = extract_feat_cam(model_v, layer, 1, x_features,
-                                                               num_cams, class_list[0, 0:num_cams], roi=True)
-                    else:
-                        features, cams, class_list = extract_feat_cam(model_v, layer, 1, x_features, num_cams)
-
-                else:
-                    size = size_h
-                    img_p = preprocess_query(img, size[0], size[1], mean_value)
-                    x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
-                    x_features[0, :, :, :] = img_p
-                    if local_search:
-                        features, cams, roi = extract_feat_cam(model_h, layer, 1, x_features,
-                                                               num_cams, class_list[0, 0:num_cams], roi=True)
-                    else:
-                        features, cams, class_list = extract_feat_cam(model_h, layer, 1, x_features, num_cams)
-
+            if img.shape[0] > img.shape[1]:
+                size = size_v
+                img_p = preprocess_query(img, size[0], size[1], mean_value)
+                x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
+                x_features[0, :, :, :] = img_p
                 if local_search:
-                    d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
-                                                cams[:, :, f_y:f_dy, f_x:f_dx], max_pool=False)
+                    features, cams, roi = extract_feat_cam(model_v, layer, 1, x_features,
+                                                           num_cams, class_list[0, 0:num_cams], roi=True)
                 else:
-                    d_wp = weighted_cam_pooling(features, cams, max_pool=False)
+                    features, cams, class_list = extract_feat_cam(model_v, layer, 1, x_features, num_cams)
 
-                print_classes(imagenet_dictionary, class_list[0])
-                desc = descriptor_aggregation(d_wp, 1, num_cams, pca_matrix)
+            else:
+                size = size_h
+                img_p = preprocess_query(img, size[0], size[1], mean_value)
+                x_features = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
+                x_features[0, :, :, :] = img_p
+                if local_search:
+                    features, cams, roi = extract_feat_cam(model_h, layer, 1, x_features,
+                                                           num_cams, class_list[0, 0:num_cams], roi=True)
+                else:
+                    features, cams, class_list = extract_feat_cam(model_h, layer, 1, x_features, num_cams)
+
+            if local_search:
+                d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
+                                            cams[:, :, f_y:f_dy, f_x:f_dx], max_pool=False)
+            else:
+                d_wp = weighted_cam_pooling(features, cams, max_pool=False)
+
+            print_classes(imagenet_dictionary, class_list[0])
+            desc = descriptor_aggregation(d_wp, 1, num_cams, pca_matrix)
 
             tagregation = time.time()
             data = descriptor_aggregation_cl(descriptors, n_images_paris, pca_matrix, class_list[0])
@@ -416,10 +398,9 @@ elif dataset == 'Paris':
                     desc_expanded = eval.expand_query(n_expand, data_local, indices_local)
                 eval.save_ranking_one_query(data, desc_expanded, image_names, ranking_path, query_img_name)
 
-    time_ranking = time.time()-tcomp
+    time_ranking = time.time() - tcomp
 
     eval.evaluate_paris(ranking_path)
-
 
     #eval.show_stats(dataset, ranking_path)
 

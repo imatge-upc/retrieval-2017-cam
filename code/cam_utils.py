@@ -70,15 +70,9 @@ def draw_bounding_box(img, heatmap, label, k, color=(0, 0, 255), threshold=0.8):
     cv2.imwrite('/imatge/ajimenez/workspace/ITR/cam_heatmaps/uu' + 'contour' + str(k) + '.jpg', ima2)
 
 
-def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, image_names, specify_class='a', filter=False, gc=''):
-    '''
-    Extract and save CAM images for the top N classes, for each image in the dataset
-    :param model: The network
-    :param batch_size: batch_size
-    :param images: images in format [num_total,3,width,height]
-    :param image_names: name of the images [num_total]
-    :return:
-    '''
+# Store CAMs from images
+def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, image_names, specify_class=None, filter=False, gc=''):
+
     tt = time.time()
 
     num_samples = images.shape[0]
@@ -121,7 +115,7 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
         t = time.time() - t0
         print 'Time elapsed to forward the batch: ', t
 
-        if specify_class == 'a':
+        if specify_class is None:
             for ii in range(0,batch_size):
                 print 'Image number: ', ii
                 if filter:
@@ -174,13 +168,13 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
                     print cam.shape
                     heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
                     heatmap[np.where(cam < 0.1)] = 0
-                    img = heatmap * 0.5 + 0.7 * np.transpose(images[i*batch_size+ii], (1,2,0))
+                    img = heatmap * 0.5 + 0.7 * np.transpose(images[i*batch_size+ii], (1, 2, 0))
                     cv2.imwrite(output_path_heatmaps+image_names[i*batch_size+ii]+'_'+str(k)+'.jpg', img)
 
                     print 'Time elapsed to compute the batch: ', time.time()-t0
 
     print 'Total time elapsed: ', time.time()-tt
-    if specify_class =='a':
+    if specify_class is None:
         return class_list, cams
     else:
         return cams
@@ -188,8 +182,8 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
 
 def extract_feat_cam_all(model, layer, batch_size, images, top_nclass=1000):
     '''
-    Extract and save CAM masks for all classes, for each image in the dataset. Also extract and save features
-    from last conv layer
+    Extract CAM masks for all classes, for each image in the dataset. Also extract  features
+    from layer
     :param model: The network
     :param batch_size: batch_size
     :param images: images in format [num_total,3,width,height]
@@ -265,22 +259,26 @@ def extract_feat_cam_all(model, layer, batch_size, images, top_nclass=1000):
 
 def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class=None, roi=False):
     '''
-    Extract and save CAM masks for the top N classes, for each image in the dataset. Also extract and save features
-    from last conv layer
-    :param model: The network
-    :param batch_size: batch_size
-    :param images: images in format [num_total,3,width,height]
-    :return:
+    :param model: Network
+    :param layer: Layer to extract features
+    :param batch_size: Batch size
+    :param images: data [n_samples,3,H,W]
+    :param top_nclass: number of CAMs to extract (Top predicted N classes)
+    :param specify_class: (If we know the classes) --> Class Array
+    :param roi: Region of Interest given list of classes
+    :return: features, cams, class_list , roi
     '''
+
+    # width, height of conv5_1 layer
+    # 14x14 for 224x224 input image
+    # H/16 x W/16 for H x W input image
+
     num_samples = images.shape[0]
     width = images.shape[3]
     height = images.shape[2]
 
     fm_w = width/16
     fm_h = height/16
-
-    tt = time.time()
-    x = np.zeros((batch_size, 3, height, width), dtype=np.float32)
 
     size_feats = 512
 
@@ -293,18 +291,14 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
     last_batch = num_samples % batch_size
     batch_size_loop = batch_size
 
-    # width, height of conv layer
-    # 14x14 for 224x224 input image
-    # 30x30 for 480x480 input image
-    # 30x14 for 480x224
-
     # Set convolutional layer to extract the CAM
     final_conv_layer = get_output_layer(model, "CAM_relu")
-    f_shape =  final_conv_layer.output_shape
+    f_shape = final_conv_layer.output_shape
     conv_layer_features = get_output_layer(model, layer)
     features_conv = np.zeros((num_samples, size_feats, fm_h, fm_w))
     #features_conv = np.zeros((num_samples, size_feats, f_shape[2], f_shape[3]))
     all_scores = np.zeros((num_samples, classes_places))
+
     # Function to get scores, conv_maps
     get_output = K.function([model.layers[0].input, K.learning_phase()], \
                             [final_conv_layer.output, model.layers[-1].output, conv_layer_features.output])
@@ -328,12 +322,12 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
         else:
             x = images[i*batch_size:batch_size*(i+1), :, :, :]
 
-        print 'Batch number: ', i
+        #print 'Batch number: ', i
 
         [conv_outputs, scores, features] = get_output([x, 0])
         features_conv[i*batch_size:i*batch_size+features.shape[0], :, :, :] = features
 
-        print ('Time elapsed to forward the batch: ', time.time()-t0)
+        #print ('Time elapsed to forward the batch: ', time.time()-t0)
 
         if specify_class is None:
 
@@ -351,7 +345,7 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
 
                     cams[i*batch_size+ii, k, :, :] = cam
 
-                    class_list[ii, k] = indexed_scores[k]
+                    class_list[i*batch_size+ii, k] = indexed_scores[k]
 
         else:
             for ii in range(0, batch_size_loop):
@@ -373,19 +367,19 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
 
                     if average:
                         average_cam = np.zeros((cams.shape[2], cams.shape[3]))
-                        for cam in cams[ii, 0:2]:
+                        for cam in cams[i*batch_size+ii, 0:2]:
                             average_cam += cam
                         heatmap = average_cam / 2
                     else:
-                        heatmap = cams[ii, 0]
+                        heatmap = cams[i*batch_size+ii, 0]
 
-                    bbox_coord[ii, 0, :] = extract_ROI(heatmap=heatmap, threshold=0.01)
-                    bbox_coord[ii, 1, :] = extract_ROI(heatmap=heatmap, threshold=0.1)
-                    bbox_coord[ii, 2, :] = extract_ROI(heatmap=heatmap, threshold=0.2)
-                    bbox_coord[ii, 3, :] = extract_ROI(heatmap=heatmap, threshold=0.3)
-                    bbox_coord[ii, 4, :] = extract_ROI(heatmap=heatmap, threshold=0.4)
+                    bbox_coord[i*batch_size+ii, 0, :] = extract_ROI(heatmap=heatmap, threshold=0.01)
+                    bbox_coord[i*batch_size+ii, 1, :] = extract_ROI(heatmap=heatmap, threshold=0.1)
+                    bbox_coord[i*batch_size+ii, 2, :] = extract_ROI(heatmap=heatmap, threshold=0.2)
+                    bbox_coord[i*batch_size+ii, 3, :] = extract_ROI(heatmap=heatmap, threshold=0.3)
+                    bbox_coord[i*batch_size+ii, 4, :] = extract_ROI(heatmap=heatmap, threshold=0.4)
 
-        print 'Time elapsed to compute the batch: ', time.time()-t0
+        print 'Time elapsed to compute CAMs & Features: ', time.time()-t0
 
     if specify_class is None:
         return features_conv, cams, class_list
