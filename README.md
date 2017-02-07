@@ -16,7 +16,7 @@ A joint collaboration between:
 
 | ![logo-gpi] | ![logo-data61] |
 |:-:|:-:|
-|[UPC Image Processing Group][gpi-web]|Data61][data61-web]|
+|[UPC Image Processing Group][gpi-web] | [Data61][data61-web]|
  
 [gpi-web]: https://imatge.upc.edu/web/ 
 [data61-web]: http://www.data61.csiro.au
