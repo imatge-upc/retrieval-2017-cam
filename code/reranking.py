@@ -13,10 +13,10 @@ from scipy.misc import imread
 import math
 
 
+# Image Preprocessing
 size_v = [720, 1024]
 size_h = [1024, 720]
 
-#Imagenet
 mean_value = [123.68, 116.779, 103.939]
 
 dim_descriptors = 512
@@ -25,46 +25,6 @@ n_images_oxford = 5063
 n_images_paris = 6392
 
 layer = 'relu5_1'
-
-
-# Sliding windows
-def compute_score_sliding(features_query, features_img, pooling='sum'):
-    score = np.zeros(features_img.shape[0])
-    f_2_max = np.zeros(features_img.shape[1])
-    num_samples = features_img.shape[0]
-    f_q = features_query[0]
-    q_h, q_w = features_query[1], features_query[2]
-    f_h, f_w = features_img.shape[2], features_img.shape[3]
-
-    if q_h > f_h or q_w > f_w:
-        print 'CHECK'
-        pass
-    else:
-        print 'else'
-
-        n_times_hor = f_w - q_w
-        n_times_ver = f_h - q_h
-        #print n_times_hor
-        #print n_times_ver
-        for img_ind in range(0,num_samples):
-            for s in range(0, n_times_hor):
-                for v in range(0, n_times_ver):
-                    for f_ind2 in range(0, features_img.shape[1]):
-                        if pooling == 'sum':
-                            f_2_max[f_ind2] = features_img[img_ind, f_ind2, v:q_h + v, s:q_w + s].sum()
-                        elif pooling == 'max':
-                            f_2_max[f_ind2] = np.amax(features_img[img_ind, f_ind2, v:q_h + v, s:q_w + s])
-
-                    f_2_max /= np.linalg.norm(f_2_max)
-                    score_aux = np.dot(f_q, f_2_max)
-                    # print 'Score aux: ', score_aux
-                    sys.stdout.flush()
-                    if score_aux > score[img_ind]:
-                        #print 'new Score: ', score_aux
-                        sys.stdout.flush()
-                        score[img_ind] = np.copy(score_aux)
-                        #print [s, v]
-    return score
 
 
 # Compute score using CAMs, PCA , Region of interest
@@ -103,64 +63,6 @@ def compute_scores_cams(desc_query, features_img, cams, roi, pca_matrix):
             else:
                 pass
     return scores, final_descriptors
-
-
-# Only with CAM wighting
-def compute_scores_cams_only(fmax_q, features_img, cams, pca_matrix):
-    print 'Feat shape:', features_img.shape
-    print 'Cams shape', cams.shape
-    scores = np.zeros(features_img.shape[0])
-    vec = np.zeros((features_img.shape[1], cams.shape[1]), dtype=np.float32)
-    for img_ind in range(features_img.shape[0]):
-        C = np.array(compute_crow_channel_weight(features_img[img_ind]))
-        print 'Img: ', img_ind
-        for f_ind in range(0, features_img.shape[1]):
-            for c_ind in range(0, cams.shape[1]):
-                vec[f_ind, c_ind] = np.multiply(features_img[img_ind,f_ind],
-                                                cams[img_ind, c_ind]).sum()
-
-        vec = vec*C[:, None]
-        vec /= np.linalg.norm(vec, axis=0)
-        vec = np.transpose(pca_matrix.transform(np.transpose(vec)))
-        vec /= np.linalg.norm(vec, axis=0)
-        f_2_max = vec.sum(axis=1)
-        f_2_max /= np.linalg.norm(f_2_max)
-        scores[img_ind] = np.dot(fmax_q, f_2_max)
-    return scores
-
-
-# Raw descriptors
-def compute_scores_roi(fmax_q, features_img, roi, pca_matrix):
-    print 'Feat shape:', features_img.shape
-    nthres = 5
-    scores = np.zeros(features_img.shape[0])
-    for img_ind in range(features_img.shape[0]):
-        C = np.array(compute_crow_channel_weight(features_img[img_ind]))
-        scores[img_ind] = -10
-        print 'Img: ', img_ind
-        x, y, w, h = roi[img_ind, :, 0], roi[img_ind, :, 1], roi[img_ind, :, 2], roi[img_ind, :, 3]
-        for th in range(0, nthres):
-            f_2_max = np.zeros(features_img.shape[1])
-            if h[th] >= 5 and w[th] >= 5:
-                for f_ind in range(0, features_img.shape[1]):
-                    f_2_max[f_ind] = features_img[img_ind, f_ind, y[th]:y[th]+h[th], x[th]:x[th]+w[th]].sum()
-
-                f_2_max = f_2_max * C
-                f_2_max /= np.linalg.norm(f_2_max)
-                print f_2_max.shape
-                f_2_max = f_2_max.reshape((1, features_img.shape[1]))
-                print f_2_max.shape
-                f_2_max = np.transpose(pca_matrix.transform(f_2_max))
-                print f_2_max.shape
-                sys.stdout.flush()
-                f_2_max /= np.linalg.norm(f_2_max)
-                score_aux = np.vdot(fmax_q, f_2_max)
-                print 'Thresh: ', th
-                print 'Score:', score_aux
-                if score_aux > scores[img_ind]:
-                    print 'Max in th:', th
-                    scores[img_ind] = np.copy(score_aux)
-    return scores
 
 
 def re_order(order, vector_h, vector_v):
@@ -267,7 +169,6 @@ def re_ranking(desc_query, class_list, image_names, indices, dataset, top_n_rank
             scores_v, final_desc_v = compute_scores_cams(desc_query, features_v, cams_v, roi_v, pca_matrix)
             print 'Time computing scores: ', time.time() - t3
             print scores_v
-
 
         # Compute Scores
         print image_order
