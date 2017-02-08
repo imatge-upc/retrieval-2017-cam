@@ -8,9 +8,9 @@
 [XavierGiro-web]: https://imatge.upc.edu/web/people/xavier-giro
 [JoseAlvarez-web]: http://www.josemalvarez.net
 
-[AlbertJimenez-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/AlbertJimenez.png "Albert Jimenez"
-[XavierGiro-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/XavierGiro.jpg "Xavier Giro-i-Nieto"
-[JoseAlvarez-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/JoseAlvarez.png "Jose Alvarez"
+[AlbertJimenez-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/AlbertJimenez.png?raw=true "Albert Jimenez"
+[XavierGiro-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/XavierGiro.jpg?raw=true "Xavier Giro-i-Nieto"
+[JoseAlvarez-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/JoseAlvarez.png?raw=true "Jose Alvarez"
 
 A joint collaboration between:
 
@@ -21,8 +21,8 @@ A joint collaboration between:
 [gpi-web]: https://imatge.upc.edu/web/ 
 [data61-web]: http://www.data61.csiro.au
 
-[logo-data61]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/logos/data61.png "Data 61"
-[logo-gpi]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/logos/gpi.png "UPC Image Processing Group"
+[logo-data61]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/logos/data61.png?raw=true "Data 61"
+[logo-gpi]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/logos/gpi.png?raw=true "UPC Image Processing Group"
 
 
 ## Abstract 
@@ -87,8 +87,8 @@ We would like to specially thank Albert Gil and Josep Pujal from our technical s
 |:-:|:-:|
 | [Albert Gil](AlbertGil-web)  |  [Josep Pujal](JosepPujal-web) |
 
-[AlbertGil-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/AlbertGil.jpg "Albert Gil"
-[JosepPujal-photo]: https://raw.githubusercontent.com/imatge-upc/retrieval-2017-icmr/master/authors/JosepPujal.jpg "Josep Pujal"
+[AlbertGil-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/AlbertGil.jpg?raw=true "Albert Gil"
+[JosepPujal-photo]:https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/JosepPujal.jpg?raw=true "Josep Pujal"
 
 [AlbertGil-web]: https://imatge.upc.edu/web/people/albert-gil-moreno
 [JosepPujal-web]: https://imatge.upc.edu/web/people/josep-pujal
