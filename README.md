@@ -36,6 +36,8 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 
 ## Usage
 
+[Cam-VGG-16 Weights] (https://drive.google.com/open?id=0BwotWbbE50RQajZjY3E4THhIWmM)
+
 ## Aknowledgements
 We would like to specially thank Albert Gil and Josep Pujal from our technical support team at the Image Processing Group at UPC.
 
