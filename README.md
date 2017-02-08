@@ -34,9 +34,51 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 
 ## Results 
 
-## Usage
+## Code Usage
+
+### Prerequisites
+We have used Keras running over Theano to perform the experiments.
+
+Python packages necessary specified in *requirements.txt* run:
+
+```
+ pip install -r requirements.txt
+ 
+```
+
+Our Experiments have been carried out in these datasets:
+
+* [Oxford Buildings](http://www.robots.ox.ac.uk/~vgg/data/oxbuildings/) (and Oxford 105k).
+
+* [Paris Buildings](http://www.robots.ox.ac.uk/~vgg/data/parisbuildings/) (and Paris 106k).
+
+Here we provide the weigths of the model:
 
 [Cam-VGG-16 Weights] (https://drive.google.com/open?id=0BwotWbbE50RQajZjY3E4THhIWmM)
+
+### How to run the code?
+
+First thing to do is setting the path for your images and model weights. We provide lists that divide images in vertical and horizontal for faster processing. At the beggining of each script there are some parameters that can be tuned like image preprocessing. 
+
+#### Feature Extraction
+
+Both scripts extract Class-Weighted Vectors. The first one is used for the original datasets. The second for the distractors.  You tune the preprocessing parameters of the images as well as the number of Class-Weighted Vectors extracted. In "Online Aggregation" the order of the stored vectors is the imagenet class order, while in "Offline Aggregation" the order of the vector is from class more probable to less probable (predicted by the network). 
+
+* A_Oxf_Par_Feat_CAMs_Extraction.py 
+* A_Dist_Feat_CAMs_Extraction.py
+
+#### Offline Aggregation
+
+Select the parameters for the offline aggregation. You can join less vectors than computed in the previous script or all of them. Also applies the selected PCA. 
+
+* B_Offline_Aggregation.py
+
+#### Ranking and Evaluation
+
+In both scripts you can choose the dataset you want to evaluate and if use query expansion or re-ranking. The first one is for offline aggregation. The second one performs aggregation at the moment of testing. We only tried it with Oxford5k and Paris6k. 
+
+* C_Offline_Eval.py
+* C_Online_Aggregation_Eval.py
 
 ## Aknowledgements
 We would like to specially thank Albert Gil and Josep Pujal from our technical support team at the Image Processing Group at UPC.
