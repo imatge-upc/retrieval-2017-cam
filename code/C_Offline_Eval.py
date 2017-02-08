@@ -7,17 +7,13 @@ import utils as utils
 import time
 from vgg_cam import VGGCAM
 from cam_utils import extract_feat_cam
-from utils import create_folders, save_data, preprocess_images, preprocess_query, load_data
+from utils import create_folders, save_data, preprocess_images, preprocess_query, load_data, print_classes
 from pooling_functions import weighted_cam_pooling, descriptor_aggregation, retrieve_n_descriptors, compute_pca
 from scipy.misc import imread
 import math
 from reranking import re_ranking
 import pickle
 
-
-def print_classes(dictionary_labels, vector_classes):
-    for vc in vector_classes:
-        print dictionary_labels[vc]
 
 imagenet_dictionary = pickle.load(open("/imatge/ajimenez/work/ITR/imagenet1000_clsid_to_human.pkl", "rb"))
 
@@ -38,13 +34,13 @@ layer = 'relu5_1'
 batch_size = 10
 
 # Query Expansion
-query_expansion = False
+query_expansion = True
 n_expand = 5
 
 # Re-ranking
 do_re_ranking = False
 
-# Descriptors for Re-ranking / Local Search
+# Descriptors for Re-ranking  (Size W x H)
 dim = '1024x720'
 size_v = [720, 1024]
 size_h = [1024, 720]
@@ -196,7 +192,7 @@ if dataset == 'Oxford':
 
     print 'Time elapsed computing distances: ', time.time()-t
 
-    eval.evaluate_oxford(ranking_path, descriptors_name)
+    eval.evaluate_oxford(ranking_path)
 
     print 'Evaluated:  ' + descriptors_name
 
@@ -470,7 +466,7 @@ elif dataset == 'Oxford105k':
 
     print 'Time elapsed computing distances: ', time.time() - t
 
-    eval.evaluate_oxford(ranking_path, descriptors_name)
+    eval.evaluate_oxford(ranking_path)
 
     print 'Evaluated:  ' + descriptors_name
 

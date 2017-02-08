@@ -12,10 +12,10 @@ from pooling_functions import weighted_cam_pooling
 # Dataset Selection
 dataset = 'distractors100k'
 
-# Extract Online or offline
-aggregation_type = 'Online'
+# Extract Online or Offline (Online not recommended for distractors (large memory needed))
+aggregation_type = 'Offline'
 
-# Image Pre-processing
+# Image Pre-processing (Size W x H)
 
 # Horizontal Images
 size_h = [1024, 720]
@@ -71,7 +71,7 @@ if dataset == 'distractors100k':
     create_folders(path_descriptors)
 
 
-def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, desc_mp, chunk_index):
+def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, chunk_index):
     images = [0] * image_batch_size
     image_names = [0] * image_batch_size
     counter = 0
@@ -128,11 +128,7 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
 
         line = line.rstrip('\n')
         images[counter] = imread(line)
-        if dataset == 'Oxford':
-            line = line.replace('/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/', '')
-        elif dataset == 'Paris':
-            line = line.replace('/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris/', '')
-        image_names[counter] = (line.replace('.jpg', ''))
+        image_names[counter] = (line)
         counter += 1
         num_images += 1
 
@@ -170,8 +166,6 @@ print 'Mean: ', mean_value
 
 t_0 = time.time()
 desc_wp = np.zeros((0, dim_descriptor), dtype=np.float32)
-desc_mp = np.zeros((0, dim_descriptor), dtype=np.float32)
-
 
 # Horizontal Images
 desc_wp, c_ind = \

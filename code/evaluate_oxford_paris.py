@@ -95,7 +95,7 @@ def compute_distances_optim(desc, data):
 
 
 # Compute mAP
-def evaluate_oxford(ranking_path, desc_name):
+def evaluate_oxford(ranking_path):
     print('Ranking and Evaluating Oxford...')
     #  queries
     path_gt = "/imatge/ajimenez/work/datasets_retrieval/Oxford/2_groundtruth/"
@@ -123,16 +123,13 @@ def evaluate_oxford(ranking_path, desc_name):
         ap_file.write(str(res)+'\n')
     mean_ap = sum(ap_list) / len(ap_list)
     print ("The mean_ap is: ", mean_ap)
-    #ap_file.write(str(mean_ap))
-    #ap_file.close()
+    ap_file.write('\n\n Mean AP: ')
+    ap_file.write(str(mean_ap))
+    ap_file.close()
     return mean_ap
 
 
-def evaluate_paris(ranking_path='/imatge/ajimenez/workspace/ITR/results/lists_paris/'):
-
-    if not os.path.exists(ranking_path):
-        os.makedirs(ranking_path)
-
+def evaluate_paris(ranking_path):
     print('Ranking and Evaluating Paris...')
     #  queries
     path_gt = "/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris_gt/"
@@ -155,10 +152,15 @@ def evaluate_paris(ranking_path='/imatge/ajimenez/workspace/ITR/results/lists_pa
             print ('AP: ', ap)
             ap_list.append(ap)
 
+    ap_file = open(ranking_path + 'all_scores_map.txt', 'w')
+    for res in ap_list:
+        ap_file.write(str(res) + '\n')
     mean_ap = sum(ap_list) / len(ap_list)
     print ("The mean_ap is: ", mean_ap)
+    ap_file.write('\n\n Mean AP: ')
+    ap_file.write(str(mean_ap))
+    ap_file.close()
     return mean_ap
-
 
 # Best Images Plot
 def show_images_top(n_images, dataset):
@@ -282,7 +284,7 @@ def show_stats(dataset, results_path):
 def compare_scores(list_1_path, list_2_path):
     f_1 = open(list_1_path, 'r')
     f_2 = open(list_2_path, 'r')
-    for i in range(0,55):
+    for i in range(0, 55):
         dif = float(f_1.readline()) - float(f_2.readline())
         print dif
 

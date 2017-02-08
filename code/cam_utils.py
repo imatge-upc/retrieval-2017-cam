@@ -46,45 +46,44 @@ def extract_ROI(heatmap, threshold):
     return x, y, w, h
 
 
-def draw_bounding_box(img, heatmap, label, k, color=(0, 0, 255), threshold=0.8):
-    # Resize heatmap to the minimum dimension and fill the rest with zeros
-    short_edge = min(img.shape[:2])  # shape: (height, width) for both numpy and cv2  || img.shape[1::-1]
-    resized_heatmap = cv2.resize(heatmap, (short_edge, short_edge))  # , interpolation=cv2.INTER_NEAREST)
-    full_heatmap = np.zeros(img.shape[:2])
-    yy = int((img.shape[0] - short_edge) / 2)
-    xx = int((img.shape[1] - short_edge) / 2)
-    full_heatmap[yy:yy + short_edge, xx:xx + short_edge] = resized_heatmap
+# Visualization Purposes, Draw bounding box around object of interest
+def draw_bounding_box(img, full_heatmap, label, color=(0, 0, 255), threshold=0.3):
     # Apply the thresholding
-    full_heatmap = full_heatmap > threshold
+    full_heatmap = cv2.resize(full_heatmap, (img.shape[1], img.shape[0]))  # , interpolation=cv2.INTER_NEAREST)
+    th = threshold * np.max(full_heatmap)
+    full_heatmap = full_heatmap > th
     # Find the largest connected component
-    ima2, contours, hierarchy = cv2.findContours(heatmap.astype('uint8'), mode=cv2.RETR_EXTERNAL,
-                                                 method=cv2.CHAIN_APPROX_SIMPLE)
+    ima2, contours, hierarchy = cv2.findContours(full_heatmap.astype('uint8'), mode=cv2.RETR_EXTERNAL,
+                                                  method=cv2.CHAIN_APPROX_SIMPLE)
+
+    cv2.imwrite('contours_' + str(threshold) + '.jpg', ima2)
     areas = [cv2.contourArea(ctr) for ctr in contours]
     max_contour = contours[areas.index(max(areas))]
+
     x, y, w, h = cv2.boundingRect(max_contour)
     # Draw bounding box and label
     cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
-    cv2.putText(img, label[:-1], (x + 3, y + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-    cv2.imwrite('/imatge/ajimenez/workspace/ITR/cam_heatmaps/uu' + str(k) + '.jpg', img)
-    cv2.imwrite('/imatge/ajimenez/workspace/ITR/cam_heatmaps/uu' + 'contour' + str(k) + '.jpg', ima2)
+    #cv2.putText(img, label[:], (x + 3, y + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.01, color, 2)
+    cv2.imwrite('bounded_' + str(threshold) + '.jpg', img)
+    return x, y, w, h
 
 
-# Store CAMs from images
+# Visualize and save CAMs Images
 def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, image_names, specify_class=None, filter=False, gc=''):
 
     tt = time.time()
 
     num_samples = images.shape[0]
-    height = images.shape[2]
-    width = images.shape[3]
 
-    fm_w = width / 16
-    fm_h = height / 16
-    x = np.zeros((batch_size, 3, width, height))
+    # Set convolutional layer to extract the CAM
+    final_conv_layer = get_output_layer(model, "CAM_relu")
+
+    f_shape = final_conv_layer.output_shape
 
     class_list = np.zeros((num_samples, top_nclass),dtype=np.int32)
 
-    cams = np.zeros((images.shape[0], top_nclass, fm_h, fm_w), dtype=np.float32)
+    cams = np.zeros((images.shape[0], top_nclass, f_shape[2], f_shape[3]), dtype=np.float32)
+
     print 'Num of total samples: ',num_samples
     print 'Batch size: ', batch_size
     sys.stdout.flush()
@@ -92,9 +91,9 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
     last_batch = num_samples % batch_size
 
     weights_fc = model.layers[-1].get_weights()[0]
-    # Set convolutional layer to extract the CAM
-    final_conv_layer = get_output_layer(model, "CAM_relu")
-    get_output = K.function([model.layers[0].input, K.learning_phase()], [final_conv_layer.output, model.layers[-1].output])
+
+    get_output = K.function([model.layers[0].input, K.learning_phase()],
+                            [final_conv_layer.output, model.layers[-1].output])
 
     for i in range(0, num_it+1):
         t0 = time.time()
@@ -115,13 +114,13 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
         print 'Time elapsed to forward the batch: ', t
 
         if specify_class is None:
-            for ii in range(0,batch_size):
+            for ii in range(0, batch_size):
                 print 'Image number: ', ii
                 if filter:
                     indexed_scores = filter_CAMs(scores[ii], gc)
                 else:
                     indexed_scores = scores[ii].argsort()[::-1]
-                for k in range(0,top_nclass):
+                for k in range(0, top_nclass):
                     w_class = weights_fc[:, indexed_scores[k]]
                     cam = np.zeros(dtype=np.float32, shape=conv_outputs.shape[2:4])
                     for ind, w in enumerate(w_class):
@@ -157,10 +156,10 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
 
                     cams[i * batch_size + ii, k, :, :] = cam
 
-                    #draw_bounding_box(images[i * batch_size + ii], cam, 'Church', k)
                     print cam.shape
                     cam_bw = cam
                     cam_bw[np.where(cam < 0)] = 0
+                    # Save the CAM image
                     cv2.imwrite(output_path_heatmaps + image_names[i * batch_size + ii] + '_bw_' + str(k) + '.jpg', cam_bw*255)
                     cam = cv2.resize(cam, (width, height))
 
@@ -168,6 +167,7 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
                     heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
                     heatmap[np.where(cam < 0.1)] = 0
                     img = heatmap * 0.5 + 0.7 * np.transpose(images[i*batch_size+ii], (1, 2, 0))
+                    # Save the CAM image in colours
                     cv2.imwrite(output_path_heatmaps+image_names[i*batch_size+ii]+'_'+str(k)+'.jpg', img)
 
                     print 'Time elapsed to compute the batch: ', time.time()-t0
@@ -179,28 +179,19 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
         return cams
 
 
+# Method for Online aggregation
 def extract_feat_cam_all(model, layer, batch_size, images, top_nclass=1000):
     '''
     Extract CAM masks for all classes, for each image in the dataset. Also extract  features
     from layer
     :param model: The network
     :param batch_size: batch_size
-    :param images: images in format [num_total,3,width,height]
+    :param images: images in format [num_total,3,height, width]
     :return:
     '''
 
     num_samples = images.shape[0]
-    width = images.shape[3]
-    height = images.shape[2]
 
-    fm_w = width/16
-    fm_h = height/16
-
-    x = np.zeros((batch_size, 3, height, width), dtype=np.float32)
-
-    size_feats = 512
-
-    class_list = np.zeros((num_samples, top_nclass))
     print 'Num of total samples: ', num_samples
     print 'Batch size: ', batch_size
     sys.stdout.flush()
@@ -209,18 +200,22 @@ def extract_feat_cam_all(model, layer, batch_size, images, top_nclass=1000):
     last_batch = num_samples % batch_size
     batch_size_loop = batch_size
 
-    # Set convolutional layer to extract the CAM
+    # Set convolutional layer to extract the CAMs (CAM_relu layer)
     final_conv_layer = get_output_layer(model, "CAM_relu")
+
+    # Set layer to extract the features
     conv_layer_features = get_output_layer(model, layer)
-    features_conv = np.zeros((num_samples, size_feats, fm_h, fm_w))
+    f_shape = conv_layer_features.output_shape
 
-    # Function to get scores, conv_maps
-    get_output = K.function([model.layers[0].input, K.learning_phase()], \
-                            [final_conv_layer.output, model.layers[-1].output, conv_layer_features.output])
-    # Extract weights from FC
+    # Initialize Arrays
+    features_conv = np.zeros((num_samples, f_shape[1], f_shape[2], f_shape[3]))
+    cams = np.zeros((images.shape[0], top_nclass, f_shape[2], f_shape[3]), dtype=np.float32)
+
+    # Function to get conv_maps
+    get_output = K.function([model.layers[0].input, K.learning_phase()],
+                            [final_conv_layer.output, conv_layer_features.output])
+    # Extract weights from Dense
     weights_fc = model.layers[-1].get_weights()[0]
-
-    cams = np.zeros((images.shape[0], top_nclass, fm_h, fm_w), dtype=np.float32)
 
     for i in range(0, num_it+1):
         t0 = time.time()
@@ -235,7 +230,7 @@ def extract_feat_cam_all(model, layer, batch_size, images, top_nclass=1000):
 
         print 'Batch number: ', i
 
-        [conv_outputs, scores, features] = get_output([x, 0])
+        [conv_outputs, features] = get_output([x, 0])
         features_conv[i*batch_size:i*batch_size+features.shape[0], :, :, :] = features
 
         print ('Time elapsed to forward the batch: ', time.time()-t0)
@@ -270,16 +265,9 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
 
     # width, height of conv5_1 layer
     # 14x14 for 224x224 input image
-    # H/16 x W/16 for H x W input image
+    # H/16 x W/16 for H x W input image with VGG-16
 
     num_samples = images.shape[0]
-    width = images.shape[3]
-    height = images.shape[2]
-
-    fm_w = width/16
-    fm_h = height/16
-
-    size_feats = 512
 
     class_list = np.zeros((num_samples, top_nclass), dtype=np.int32)
     print 'Num of total samples: ', num_samples
@@ -290,25 +278,27 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
     last_batch = num_samples % batch_size
     batch_size_loop = batch_size
 
-    # Set convolutional layer to extract the CAM
+    # Set convolutional layer to extract the CAMs (CAM_relu layer)
     final_conv_layer = get_output_layer(model, "CAM_relu")
-    f_shape = final_conv_layer.output_shape
+
+    # Set layer to extract the features
     conv_layer_features = get_output_layer(model, layer)
-    features_conv = np.zeros((num_samples, size_feats, fm_h, fm_w))
-    #features_conv = np.zeros((num_samples, size_feats, f_shape[2], f_shape[3]))
-    all_scores = np.zeros((num_samples, classes_places))
+    f_shape = conv_layer_features.output_shape
 
-    # Function to get scores, conv_maps
-    get_output = K.function([model.layers[0].input, K.learning_phase()], \
-                            [final_conv_layer.output, model.layers[-1].output, conv_layer_features.output])
-    # Extract weights from FC
-    weights_fc = model.layers[-1].get_weights()[0]
-
-    #cams = np.zeros((images.shape[0], top_nclass, fm_h, fm_w), dtype=np.float32)
+    # Initialize Arrays
+    features_conv = np.zeros((num_samples, f_shape[1], f_shape[2], f_shape[3]))
+    all_scores = np.zeros((num_samples, classes_imagenet))
     cams = np.zeros((images.shape[0], top_nclass, f_shape[2], f_shape[3]), dtype=np.float32)
 
+    # Function to get scores, conv_maps
+    get_output = K.function([model.layers[0].input, K.learning_phase()],
+                            [final_conv_layer.output, model.layers[-1].output, conv_layer_features.output])
+    # Extract weights from Dense
+    weights_fc = model.layers[-1].get_weights()[0]
+
+    # Region of interest for re-ranking (bounding box coordinates --> (num samples, num_thresholds, x,y,dx,dy)
     if roi:
-        bbox_coord = np.zeros((num_samples, 5, 4),dtype=np.int16)
+        bbox_coord = np.zeros((num_samples, 5, 4), dtype=np.int16)
 
     for i in range(0, num_it+1):
         t0 = time.time()
@@ -349,7 +339,6 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
         else:
             for ii in range(0, batch_size_loop):
                 # print 'Image number: ', ii
-                indexed_scores = scores[ii].argsort()[::-1]
                 for k in range(0, top_nclass):
                     w_class = weights_fc[:, specify_class[k]]
                     all_scores[i * batch_size + ii, k] = scores[ii, specify_class[k]]
@@ -361,6 +350,7 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
 
                     cams[i * batch_size + ii, k, :, :] = cam
 
+                # How to compute the ROI of the image, in the paper results we average 2 most probable classes
                 if roi:
                     average = True
 
@@ -372,7 +362,7 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
                     else:
                         heatmap = cams[i*batch_size+ii, 0]
 
-                    bbox_coord[i*batch_size+ii, 0, :] = extract_ROI(heatmap=heatmap, threshold=0.01)
+                    bbox_coord[i*batch_size+ii, 0, :] = extract_ROI(heatmap=heatmap, threshold=0.01)# Full Image
                     bbox_coord[i*batch_size+ii, 1, :] = extract_ROI(heatmap=heatmap, threshold=0.1)
                     bbox_coord[i*batch_size+ii, 2, :] = extract_ROI(heatmap=heatmap, threshold=0.2)
                     bbox_coord[i*batch_size+ii, 3, :] = extract_ROI(heatmap=heatmap, threshold=0.3)
@@ -382,10 +372,8 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
 
     if specify_class is None:
         return features_conv, cams, class_list
-    elif specify_class == 'No':
-        return features_conv, cams
+
     else:
-        print bbox_coord.shape
         return features_conv, cams, bbox_coord
 
 

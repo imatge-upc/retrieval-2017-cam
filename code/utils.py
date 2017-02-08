@@ -70,3 +70,8 @@ def preprocess_query(image, img_width, img_height, mean_value):
     image = np.transpose(image, (2, 0, 1))
     print image.shape
     return image
+
+
+def print_classes(dictionary_labels, vector_classes):
+    for vc in vector_classes:
+        print dictionary_labels[vc]

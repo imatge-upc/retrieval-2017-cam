@@ -163,19 +163,7 @@ if dataset == 'Oxford':
                 w = img_cropped.shape[1] - (img_cropped.shape[1] % 16)
                 img_cropped = preprocess_query(img_cropped, w, h, mean_value)
 
-                # if img.shape[0] > img.shape[1]:
-                #     size = size_v
-                # else:
-                #     size = size_h
-                #
-                # img_prep = preprocess_query(img_cropped, size[0], size[1], mean_value)
                 x_feat = np.zeros((1, img_cropped.shape[0], img_cropped.shape[1], img_cropped.shape[2]), dtype=np.float32)
-
-                #x_feat = np.zeros((1, img_prep.shape[0], img_prep.shape[1], img_prep.shape[2]), dtype=np.float32)
-
-                #model = VGGCAM(nb_classes, (img_prep.shape[0], img_prep.shape[1], img_prep.shape[2]),
-                #               bounding_box=[x, y, dx, dy])
-
 
                 model = VGGCAM(nb_classes, (img_cropped.shape[0], img_cropped.shape[1], img_cropped.shape[2]))
                 #print 'Model created'
@@ -215,8 +203,6 @@ if dataset == 'Oxford':
             else:
                 d_wp = weighted_cam_pooling(features, cams, max_pool=False)
 
-            #d_wp = weighted_cam_pooling(features[:, :, f_y:f_dy, f_x:f_dx],
-            #                            cams[:, :, :, :], max_pool=False)
 
             print_classes(imagenet_dictionary, class_list[0])
             desc = descriptor_aggregation(d_wp, 1, num_cams, pca_matrix)

@@ -13,10 +13,10 @@ from pooling_functions import weighted_cam_pooling
 dataset = 'Oxford'
 #dataset = 'Paris'
 
-# Extract Online or Offline
+# Extract Online or Offline (Online saves 1 file/image)
 aggregation_type = 'Offline'
 
-# Image Pre-processing
+# Image Pre-processing (Size W x H)
 
 # Horizontal Images
 size_h = [1024, 720]
@@ -256,6 +256,7 @@ elif dataset == 'Paris':
 
 print 'Saving Data...'
 print desc_wp.shape
+# Shape = [num_images * num_classes, dim_descriptor]
 save_data(desc_wp, descriptors_cams_path_wp, '')
 print 'Data Saved'
 print 'Total time elapsed: ', time.time() - t_0
