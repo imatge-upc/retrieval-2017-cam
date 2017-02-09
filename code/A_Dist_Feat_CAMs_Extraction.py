@@ -55,11 +55,15 @@ elif aggregation_type == 'Offline':
 
 # Images to load into the net (+ images, + memory, + fast)
 batch_size = 12
-# Images to pre-load (+ images, + memory, + fast)
+# Images to pre-load (+ images, + memory, + fast) (also saves feats & CAMs for this number when saving-CAMs)
 image_batch_size = 200
 # Dimension of h5 files (+ images, + memory)
 descriptors_batch_size = 10000
 chunk_index = 0
+
+# For saving also features & CAMs
+saving_CAMs = True
+ind = 0
 
 if dataset == 'distractors100k':
     n_img_dataset = 100070
@@ -70,14 +74,19 @@ if dataset == 'distractors100k':
     descriptors_cams_path_mp = path_descriptors + 'distractor_all_' + str(num_classes) + '_mp'
     create_folders(path_descriptors)
 
+    # If you want to save features & CAMs
+    feature_path = '/imatge/ajimenez/work/ITR/distractors100k/features/' + model_name + '/' + layer + '/' + dim + '/'
+    cam_path = '/imatge/ajimenez/work/ITR/distractors100k/cams/' + model_name + '/' + layer + '/' + dim + '/'
+    create_folders(feature_path)
+    create_folders(cam_path)
 
-def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, chunk_index):
+
+def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, chunk_index, ind=0):
     images = [0] * image_batch_size
     image_names = [0] * image_batch_size
     counter = 0
     desc_count = 0
     num_images = 0
-    ind = 0
     t0 = time.time()
 
     print 'Horizontal size: ', size[0]
@@ -99,6 +108,9 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
             if aggregation_type == 'Offline':
                 features, cams, cl = \
                     extract_feat_cam(model, layer, batch_size, data, num_classes)
+                if saving_CAMs:
+                    save_data(cams, cam_path, 'cams' + str(ind) + '.h5')
+                    save_data(features, feature_path, 'features' + str(ind) + '.h5')
                 d_wp = weighted_cam_pooling(features, cams)
                 desc_wp = np.concatenate((desc_wp, d_wp))
 
@@ -138,6 +150,9 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
     data[0:] = preprocess_images(images[0:counter], size[0], size[1], mean_value)
     if aggregation_type == 'Offline':
         features, cams, cl = extract_feat_cam(model, layer, batch_size, data, num_classes)
+        if saving_CAMs:
+            save_data(cams, cam_path, 'cams' + str(ind) + '.h5')
+            save_data(features, feature_path, 'features' + str(ind) + '.h5')
         d_wp = weighted_cam_pooling(features, cams)
         desc_wp = np.concatenate((desc_wp, d_wp))
         save_data(desc_wp, descriptors_cams_path_wp + '_' + str(chunk_index) + '.h5', '')
@@ -150,6 +165,7 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
             save_data(d_wp[img_ind * nb_classes:(img_ind + 1) * nb_classes], path_descriptors,
                       image_names[img_ind] + '.h5')
 
+    ind += 1
     print desc_wp.shape
     print 'Batch processed, CAMs descriptors obtained!'
     print 'Total time elapsed: ', time.time() - t0
@@ -173,7 +189,7 @@ desc_wp, c_ind = \
 
 # Vertical Images
 desc_wp, c_ind = \
-    extract_cam_descriptors(model_name, batch_size, num_classes, size_v, mean_value, train_list_path_v, desc_wp, c_ind)
+    extract_cam_descriptors(model_name, batch_size, num_classes, size_v, mean_value, train_list_path_v, desc_wp, c_ind, ind)
 
 
 print 'Data Saved'

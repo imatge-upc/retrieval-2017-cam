@@ -57,8 +57,13 @@ elif aggregation_type == 'Online':
 
 # Images to load into the net (+ images, + memory, + fast)
 batch_size = 12
-# Images to pre-load (+ images, + memory, + fast)
+# Images to pre-load (+ images, + memory, + fast) (also saves feats & CAMs for this number when saving-CAMs)
 image_batch_size = 250
+
+# For saving also features & CAMs
+saving_CAMs = True
+# Index for saving chunks
+ind = 0
 
 
 if dataset == 'Oxford':
@@ -68,7 +73,14 @@ if dataset == 'Oxford':
     path_descriptors = '/imatge/ajimenez/work/ITR/oxford/descriptors_new2/' + model_name + '/' + layer + '/' + dim + '/'
     descriptors_cams_path_wp = path_descriptors + 'oxford_all_' + str(num_classes) + '_wp.h5'
     descriptors_cams_path_mp = path_descriptors + 'oxford_all_' + str(num_classes) + '_mp.h5'
+
+    # If you want to save features & CAMs
+    feature_path = '/imatge/ajimenez/work/ITR/oxford/features/' + model_name + '/' + layer + '/' + dim + '/'
+    cam_path = '/imatge/ajimenez/work/ITR/oxford/cams/' + model_name + '/' + layer + '/' + dim + '/'
+
     create_folders(path_descriptors)
+    create_folders(feature_path)
+    create_folders(cam_path)
 
 if dataset == 'Paris':
     n_img_dataset = 6392
@@ -79,13 +91,18 @@ if dataset == 'Paris':
     descriptors_cams_path_mp = path_descriptors + 'paris_all_' + str(num_classes) + '_mp.h5'
     create_folders(path_descriptors)
 
+    # If you want to save features & CAMs
+    feature_path = '/imatge/ajimenez/work/ITR/paris/features/' + model_name + '/' + layer + '/' + dim + '/'
+    cam_path = '/imatge/ajimenez/work/ITR/paris/cams/' + model_name + '/' + layer + '/' + dim + '/'
+    create_folders(feature_path)
+    create_folders(cam_path)
 
-def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp):
+
+def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, ind=0):
     images = [0] * image_batch_size
     image_names = [0] * image_batch_size
     counter = 0
     num_images = 0
-    ind = 0
     t0 = time.time()
 
     print 'Horizontal size: ', size[0]
@@ -107,6 +124,9 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
             if aggregation_type == 'Offline':
                 features, cams, cl = \
                     extract_feat_cam(model, layer, batch_size, data, num_classes)
+                if saving_CAMs:
+                    save_data(cams, cam_path, 'cams_' + str(ind) + '.h5')
+                    save_data(features, feature_path, 'features_' + str(ind) + '.h5')
                 d_wp = weighted_cam_pooling(features, cams)
                 desc_wp = np.concatenate((desc_wp, d_wp))
 
@@ -142,6 +162,9 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
 
     if aggregation_type == 'Offline':
         features, cams, cl = extract_feat_cam(model, layer, batch_size, data, num_classes)
+        if saving_CAMs:
+            save_data(cams, cam_path, 'cams_' + str(ind) + '.h5')
+            save_data(features, feature_path, 'features_' + str(ind) + '.h5')
         d_wp = weighted_cam_pooling(features, cams)
         desc_wp = np.concatenate((desc_wp, d_wp))
 
@@ -151,7 +174,7 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
         for img_ind in range(0, counter):
             save_data(d_wp[img_ind * nb_classes:(img_ind + 1) * nb_classes], path_descriptors,
                       image_names[img_ind] + '.h5')
-
+    ind += 1
     print desc_wp.shape
     print 'Batch processed, CAMs descriptors obtained!'
     print 'Total time elapsed: ', time.time() - t0
@@ -175,9 +198,10 @@ desc_wp = \
 
 # Vertical Images
 desc_wp = \
-    extract_cam_descriptors(model_name, batch_size, num_classes, size_v, mean_value, train_list_path_v, desc_wp)
+    extract_cam_descriptors(model_name, batch_size, num_classes, size_v, mean_value, train_list_path_v, desc_wp, ind)
 
 print desc_wp.shape
+
 
 # Queries
 if dataset == 'Oxford':
@@ -207,6 +231,10 @@ if dataset == 'Oxford':
 
             if aggregation_type == 'Offline':
                 features, cams, cl = extract_feat_cam(model, layer, batch_size, x, num_classes)
+                if saving_CAMs:
+                    save_data(cams, cam_path, 'cams_' + str(ind) + '.h5')
+                    save_data(features, feature_path, 'features_' + str(ind) + '.h5')
+
                 d_wp = weighted_cam_pooling(features, cams)
                 desc_wp = np.concatenate((desc_wp, d_wp))
 
@@ -216,6 +244,7 @@ if dataset == 'Oxford':
                 save_data(d_wp, path_descriptors, line+'.h5')
             print desc_wp.shape
             i += 1
+            ind += 1
 
 elif dataset == 'Paris':
     i = 0
@@ -244,6 +273,9 @@ elif dataset == 'Paris':
 
             if aggregation_type == 'Offline':
                 features, cams, cl = extract_feat_cam(model, layer, batch_size, x, num_classes)
+                if saving_CAMs:
+                    save_data(cams, cam_path, 'cams_' + str(ind) + '.h5')
+                    save_data(features, feature_path, 'features_' + str(ind) + '.h5')
                 d_wp = weighted_cam_pooling(features, cams)
                 desc_wp = np.concatenate((desc_wp, d_wp))
 
@@ -253,6 +285,7 @@ elif dataset == 'Paris':
                 save_data(d_wp, path_descriptors, line+'.h5')
 
             i += 1
+            ind += 1
 
 print 'Saving Data...'
 print desc_wp.shape
