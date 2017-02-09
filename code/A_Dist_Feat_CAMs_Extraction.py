@@ -109,8 +109,8 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
                 features, cams, cl = \
                     extract_feat_cam(model, layer, batch_size, data, num_classes)
                 if saving_CAMs:
-                    save_data(cams, cam_path, 'cams' + str(ind) + '.h5')
-                    save_data(features, feature_path, 'features' + str(ind) + '.h5')
+                    save_data(cams, cam_path, 'cams_' + str(ind) + '.h5')
+                    save_data(features, feature_path, 'features_' + str(ind) + '.h5')
                 d_wp = weighted_cam_pooling(features, cams)
                 desc_wp = np.concatenate((desc_wp, d_wp))
 
@@ -151,8 +151,8 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
     if aggregation_type == 'Offline':
         features, cams, cl = extract_feat_cam(model, layer, batch_size, data, num_classes)
         if saving_CAMs:
-            save_data(cams, cam_path, 'cams' + str(ind) + '.h5')
-            save_data(features, feature_path, 'features' + str(ind) + '.h5')
+            save_data(cams, cam_path, 'cams_' + str(ind) + '.h5')
+            save_data(features, feature_path, 'features_' + str(ind) + '.h5')
         d_wp = weighted_cam_pooling(features, cams)
         desc_wp = np.concatenate((desc_wp, d_wp))
         save_data(desc_wp, descriptors_cams_path_wp + '_' + str(chunk_index) + '.h5', '')
