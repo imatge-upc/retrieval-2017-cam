@@ -54,7 +54,7 @@ Our Experiments have been carried out in these datasets:
 
 Here we provide the weigths of the model:
 
-[Cam-VGG-16 Weights] (https://drive.google.com/open?id=0BwotWbbE50RQajZjY3E4THhIWmM)
+* [CAM-VGG-16 Weights](https://drive.google.com/open?id=0BwotWbbE50RQajZjY3E4THhIWmM)
 
 ### How to run the code?
 
