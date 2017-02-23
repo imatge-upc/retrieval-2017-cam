@@ -95,3 +95,4 @@ We would like to specially thank Albert Gil and Josep Pujal from our technical s
 
 ## Contact
 
+If you have any general doubt about our work or code which may be of interest for other researchers, please use the [public issues section](https://github.com/imatge-upc/retrieval-2017-icmr/issues) on this github repo. Alternatively, drop us an e-mail at <mailto:albertjimenezsanfiz@gmail.com>.
