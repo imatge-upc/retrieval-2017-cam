@@ -42,7 +42,9 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 ## Code Usage
 
 ### Prerequisites
-We have used Keras running over Theano to perform the experiments.
+We have used Keras running over Theano to perform the experiments. 
+
+Was done previous to Keras 2.0 but should work with that version as well. 
 
 Python packages necessary specified in *requirements.txt* run:
 
