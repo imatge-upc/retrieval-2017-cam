@@ -3,15 +3,49 @@ import time
 import sys
 from pooling_functions import descriptor_aggregation, retrieve_n_descriptors, compute_pca
 from utils import create_folders, save_data, load_data
+import getopt
+
+
+# Instructions Arguments: python script.py -d 'Oxford/Paris' --nc 32 --pca 1
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'd:', ['nc=', 'pca='])
+    flag_nc = False
+    flag_pca = False
+    flag_d = False
+except getopt.GetoptError:
+    print 'script.py -d <dataset> -a <aggregation>'
+    sys.exit(2)
+for opt, arg in opts:
+    if opt == '-d':
+        if arg == 'Oxford' or arg == 'Paris' or arg == 'Oxford105k' or arg == 'Paris106k':
+            dataset = arg
+            flag_d = True
+
+    elif opt == '--nc':
+            num_classes = int(arg)
+            flag_nc = True
+
+    elif opt == '--pca':
+            num_classes_pca = int(arg)
+            flag_pca = True
 
 
 # Parameters
-dataset = 'Oxford'
+if not flag_d:
+    dataset = 'Oxford'
+    print 'Default dataset: ', dataset
 
-# Num classes stored in the precomputed
+if not flag_nc:
+    num_classes = 32
+    print 'Default classes: ', num_classes
+
+
+n_images_distractors = 100070
+n_images_oxford = 5063
+n_images_paris = 6392
+
+# Num classes stored in the precomputed --> Have to be set up
 num_prec_classes = 64
-
-num_classes = 32
 
 model_name = 'Vgg_16_CAM'
 layer = 'relu5_1'
@@ -21,11 +55,16 @@ dim = '1024x720'
 apply_pca = True
 pca_dim = 512
 dim_descriptor = 512
-num_classes_pca = 1
+
+if not flag_pca:
+    num_classes_pca = 1
+    print 'Default pca_classes: ', num_classes_pca
+
 
 print 'Dataset ', dataset
 print 'Num Classes ', num_classes
 print 'Dimension Descriptor ', dim_descriptor
+
 if apply_pca:
     print 'Num Classes PCA ', num_classes_pca
     print 'Dimension PCA ', pca_dim
@@ -34,61 +73,61 @@ t_0 = time.time()
 
 # DATASET PATHS AND NAMES
 if dataset == 'Oxford':
-    path_descriptors = '/imatge/ajimenez/work/ITR/oxford/descriptors_new2/' + \
+    path_descriptors = '/data/jim011/oxford/descriptors/' + \
                        model_name + '/' + layer + '/' + dim + '/'
 
     create_folders(path_descriptors)
-    cam_descriptors_path = '/imatge/ajimenez/work/ITR/oxford/descriptors_new2/Vgg_16_CAM/relu5_1/1024x720/' \
-                           'oxford_all_32_wp.h5'
+    cam_descriptors_path = '/data/jim011/oxford/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
+                           'oxford_all_64_wp.h5'
 
-    pca_descriptors_path = '/imatge/ajimenez/work/ITR/paris/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/crow/' \
+    pca_descriptors_path = '/data/jim011/paris/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'paris_all_64_wp.h5'
-    num_images = 5063
-    num_img_pca = 6392
+    num_images = n_images_oxford
+    num_img_pca = n_images_paris
     name_descriptors = 'oxford_' + str(num_classes)
     pca_name = '_pca_' + str(pca_dim) + '_paris_'+str(num_classes_pca)
 
 if dataset == 'Oxford105k':
-    path_descriptors = '/imatge/ajimenez/work/ITR/oxford/descriptors_new/' + \
+    path_descriptors = '/data/jim011/oxford/descriptors/' + \
                        model_name + '/' + layer + '/' + dim + '/'
 
     create_folders(path_descriptors)
-    cam_descriptors_path = '/imatge/ajimenez/work/ITR/descriptors100k/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/' \
+    cam_descriptors_path = '/data/jim011/descriptors100k/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'distractor_all_64_wp_'
 
-    pca_descriptors_path = '/imatge/ajimenez/work/ITR/paris/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/crow/' \
+    pca_descriptors_path = '/data/jim011/paris/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'paris_all_64_wp.h5'
-    num_images = 100070
-    num_img_pca = 6392
+    num_images = n_images_distractors
+    num_img_pca = n_images_paris
     name_descriptors = 'oxford_105k_' + str(num_classes)
     pca_name = '_pca_' + str(pca_dim) + '_paris_'+str(num_classes_pca)
 
 if dataset == 'Paris':
-    path_descriptors = '/imatge/ajimenez/work/ITR/paris/descriptors_new/' + \
-                       model_name + '/' + layer+'/' + dim + '/crow/'
+    path_descriptors = '/data/jim011/paris/descriptors/' + \
+                       model_name + '/' + layer+'/' + dim + '/'
 
     create_folders(path_descriptors)
-    cam_descriptors_path = '/imatge/ajimenez/work/ITR/paris/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/crow/' \
+    cam_descriptors_path = '/data/jim011/paris/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'paris_all_64_wp.h5'
-    pca_descriptors_path = '/imatge/ajimenez/work/ITR/oxford/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/crow/' \
+    pca_descriptors_path = '/data/jim011/oxford/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'oxford_all_64_wp.h5'
-    num_images = 6392
-    num_img_pca = 5063
+    num_images = n_images_paris
+    num_img_pca = n_images_oxford
     name_descriptors = 'paris_' + str(num_classes)
     pca_name = '_pca_' + str(pca_dim) + '_oxford_'+str(num_classes_pca)
 
 if dataset == 'Paris106k':
-    path_descriptors = '/imatge/ajimenez/work/ITR/paris/descriptors_new/' + \
-                       model_name + '/' + layer + '/' + dim + '/crow/'
+    path_descriptors = '/data/jim011/paris/descriptors/' + \
+                       model_name + '/' + layer + '/' + dim + '/'
 
     create_folders(path_descriptors)
-    cam_descriptors_path = '/imatge/ajimenez/work/ITR/descriptors100k/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/' \
+    cam_descriptors_path = '/data/jim011/descriptors100k/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'distractor_all_64_wp_'
 
-    pca_descriptors_path = '/imatge/ajimenez/work/ITR/oxford/descriptors_new/Vgg_16_CAM/relu5_1/1024x720/crow/' \
+    pca_descriptors_path = '/data/jim011/oxford/descriptors/' + model_name + '/' + layer + '/' + dim + '/' \
                            'oxford_all_64_wp.h5'
-    num_images = 100070
-    num_img_pca = 5063
+    num_images = n_images_distractors
+    num_img_pca = n_images_oxford
     name_descriptors = 'paris_106k_' + str(num_classes)
     pca_name = '_pca_' + str(pca_dim) + '_oxford_'+str(num_classes_pca)
 
@@ -98,7 +137,7 @@ if dataset == 'Paris106k':
 if apply_pca:
     tpca = time.time()
     pca_desc = retrieve_n_descriptors(num_classes_pca, num_img_pca, load_data(pca_descriptors_path))
-    pca_matrix = compute_pca(pca_desc, pca_dim=pca_dim)
+    pca_matrix = compute_pca(pca_desc, pca_dim=pca_dim, whiten=True)
     name_descriptors += pca_name
     print 'PCA matrix shape:', pca_matrix.components_.shape
     print 'Time elapsed PCA: ', time.time() - tpca

@@ -34,10 +34,13 @@ def extract_ROI(heatmap, threshold):
     th = threshold * np.max(heatmap)
     heatmap = heatmap > th
     # Find the largest connected component
-    ima2, contours, hierarchy = cv2.findContours(heatmap.astype('uint8'), mode=cv2.RETR_EXTERNAL,
-                                                 method=cv2.CHAIN_APPROX_SIMPLE)
+
+    contours, hierarchy = cv2.findContours(heatmap.astype('uint8'), mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+
     areas = [cv2.contourArea(ctr) for ctr in contours]
+
     max_contour = contours[areas.index(max(areas))]
+
     x, y, w, h = cv2.boundingRect(max_contour)
     if w == 0:
         w = heatmap.shape[1]
@@ -70,7 +73,7 @@ def draw_bounding_box(img, full_heatmap, label, color=(0, 0, 255), threshold=0.3
 
 # Visualize and save CAMs Images
 def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, image_names, specify_class=None, filter=False, gc=''):
-
+    print images.shape
     tt = time.time()
 
     num_samples = images.shape[0]
@@ -108,7 +111,7 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
             x = images[i*batch_size:batch_size*(i+1), :, :, :]
 
         sys.stdout.flush()
-        [conv_outputs, scores] = get_output([x,0])
+        [conv_outputs, scores] = get_output([x, 0])
 
         t = time.time() - t0
         print 'Time elapsed to forward the batch: ', t
@@ -124,7 +127,7 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
                     w_class = weights_fc[:, indexed_scores[k]]
                     cam = np.zeros(dtype=np.float32, shape=conv_outputs.shape[2:4])
                     for ind, w in enumerate(w_class):
-                        cam += w * conv_outputs[ii,ind, :, :]
+                        cam += w * conv_outputs[ii, ind, :, :]
 
                     class_list[ii, k] = indexed_scores[k]
 
@@ -134,9 +137,8 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
                     print cam.shape
                     cam_bw = cam
                     cam_bw[np.where(cam < 0)] = 0
-                    cv2.imwrite(output_path_heatmaps + image_names[i * batch_size + ii] + '_bw_' + str(k) + '.jpg',
-                                cam_bw * 255)
-                    cam = cv2.resize(cam, (width, height))
+                    cv2.imwrite(output_path_heatmaps + image_names[i * batch_size + ii] + '_bw_' + str(k) + '.jpg', cam_bw * 255)
+                    cam = cv2.resize(cam, (images.shape[3], images.shape[2]))
 
                     print cam.shape
                     heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
@@ -160,15 +162,15 @@ def visualize_cam(model, batch_size, images, top_nclass, output_path_heatmaps, i
                     cam_bw = cam
                     cam_bw[np.where(cam < 0)] = 0
                     # Save the CAM image
-                    cv2.imwrite(output_path_heatmaps + image_names[i * batch_size + ii] + '_bw_' + str(k) + '.jpg', cam_bw*255)
-                    cam = cv2.resize(cam, (width, height))
+                    #cv2.imwrite(output_path_heatmaps + image_names[i * batch_size + ii] + '_bw_' + str(k) + '.jpg', cam_bw*255)
+                    cam = cv2.resize(cam, (images.shape[3], images.shape[2]))
 
                     print cam.shape
                     heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
                     heatmap[np.where(cam < 0.1)] = 0
                     img = heatmap * 0.5 + 0.7 * np.transpose(images[i*batch_size+ii], (1, 2, 0))
                     # Save the CAM image in colours
-                    cv2.imwrite(output_path_heatmaps+image_names[i*batch_size+ii]+'_'+str(k)+'.jpg', img)
+                    #cv2.imwrite(output_path_heatmaps+image_names[i*batch_size+ii]+'_'+str(k)+'.jpg', img)
 
                     print 'Time elapsed to compute the batch: ', time.time()-t0
 
@@ -369,11 +371,12 @@ def extract_feat_cam(model, layer, batch_size, images, top_nclass, specify_class
                     bbox_coord[i*batch_size+ii, 4, :] = extract_ROI(heatmap=heatmap, threshold=0.4)
 
         print 'Time elapsed to compute CAMs & Features: ', time.time()-t0
-
+        sys.stdout.flush()
     if specify_class is None:
         return features_conv, cams, class_list
 
     else:
         return features_conv, cams, bbox_coord
+
 
 

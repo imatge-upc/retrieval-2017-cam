@@ -42,43 +42,43 @@ else:
 # Model Selection: VGG_CAM
 if model_name == 'Vgg_16_CAM':
     nb_classes = 1000
-    VGGCAM_weight_path = '/imatge/ajimenez/work/ITR/models/vgg_cam_weights.h5'
+    VGGCAM_weight_path = '/home/jim011/workspace/retrieval-2017-icmr/models/vgg_cam_weights.h5'
     layer = 'relu5_1'
     dim_descriptor = 512
 
 # CAM Extraction
 
-if aggregation_type == 'Online':
+if aggregation_type == 'Offline':
     num_classes = 64
-elif aggregation_type == 'Offline':
+elif aggregation_type == 'Online':
     num_classes = 1000
 
 # Images to load into the net (+ images, + memory, + fast)
-batch_size = 12
+batch_size = 6
 # Images to pre-load (+ images, + memory, + fast) (also saves feats & CAMs for this number when saving-CAMs)
-image_batch_size = 200
+image_batch_size = 1000
 # Dimension of h5 files (+ images, + memory)
 descriptors_batch_size = 10000
 chunk_index = 0
 
 # For saving also features & CAMs
-saving_CAMs = True
+saving_CAMs = False
 ind = 0
 
 if dataset == 'distractors100k':
     n_img_dataset = 100070
-    train_list_path_h = "/imatge/ajimenez/workspace/ITR/lists/list_oxford105k_horizontal.txt"
-    train_list_path_v = "/imatge/ajimenez/workspace/ITR/lists/list_oxford105k_vertical.txt"
-    path_descriptors = '/imatge/ajimenez/work/ITR/descriptors100k/descriptors_new/' + model_name + '/' + layer + '/' + dim + '/'
+    train_list_path_h = "/home/jim011/workspace/retrieval-2017-icmr/lists/list_oxford105k_horizontal.txt"
+    train_list_path_v = "/home/jim011/workspace/retrieval-2017-icmr/lists/list_oxford105k_vertical.txt"
+    path_descriptors = '/data/jim011/descriptors100k/descriptors/' + model_name + '/' + layer + '/' + dim + '/'
     descriptors_cams_path_wp = path_descriptors + 'distractor_all_' + str(num_classes) + '_wp'
     descriptors_cams_path_mp = path_descriptors + 'distractor_all_' + str(num_classes) + '_mp'
     create_folders(path_descriptors)
 
     # If you want to save features & CAMs
-    feature_path = '/imatge/ajimenez/work/ITR/distractors100k/features/' + model_name + '/' + layer + '/' + dim + '/'
-    cam_path = '/imatge/ajimenez/work/ITR/distractors100k/cams/' + model_name + '/' + layer + '/' + dim + '/'
-    create_folders(feature_path)
-    create_folders(cam_path)
+    # feature_path = '/imatge/ajimenez/work/ITR/distractors100k/features/' + model_name + '/' + layer + '/' + dim + '/'
+    # cam_path = '/imatge/ajimenez/work/ITR/distractors100k/cams/' + model_name + '/' + layer + '/' + dim + '/'
+    # create_folders(feature_path)
+    # create_folders(cam_path)
 
 
 def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, chunk_index, ind=0):
@@ -129,9 +129,9 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
             sys.stdout.flush()
             counter = 0
             desc_count += image_batch_size
-            if descriptors_batch_size == desc_count and aggregation_type == 'Online':
+            if descriptors_batch_size == desc_count and aggregation_type == 'Offline':
                 print 'Saving ...' + descriptors_cams_path_wp + '_' + str(chunk_index)+'.h5'
-                save_data(desc_wp, descriptors_cams_path_wp + '_' + str(chunk_index)+'.h5','')
+                save_data(desc_wp, descriptors_cams_path_wp + '_' + str(chunk_index)+'.h5', '')
                 desc_count = 0
                 chunk_index += 1
                 desc_wp = np.zeros((0, dim_descriptor), dtype=np.float32)
@@ -140,7 +140,7 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
 
         line = line.rstrip('\n')
         images[counter] = imread(line)
-        image_names[counter] = (line)
+        image_names[counter] = line
         counter += 1
         num_images += 1
 
@@ -148,6 +148,7 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
     print 'Last Batch:'
     data = np.zeros((counter, 3, size[1], size[0]), dtype=np.float32)
     data[0:] = preprocess_images(images[0:counter], size[0], size[1], mean_value)
+
     if aggregation_type == 'Offline':
         features, cams, cl = extract_feat_cam(model, layer, batch_size, data, num_classes)
         if saving_CAMs:
@@ -158,12 +159,6 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
         save_data(desc_wp, descriptors_cams_path_wp + '_' + str(chunk_index) + '.h5', '')
         chunk_index += 1
         desc_wp = np.zeros((0, dim_descriptor), dtype=np.float32)
-    elif aggregation_type == 'Online':
-        features, cams = extract_feat_cam_all(model, layer, batch_size, data)
-        d_wp = weighted_cam_pooling(features, cams)
-        for img_ind in range(0, counter):
-            save_data(d_wp[img_ind * nb_classes:(img_ind + 1) * nb_classes], path_descriptors,
-                      image_names[img_ind] + '.h5')
 
     ind += 1
     print desc_wp.shape

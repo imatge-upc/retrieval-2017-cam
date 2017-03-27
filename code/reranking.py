@@ -79,12 +79,12 @@ def re_order(order, vector_h, vector_v):
     return vector
 
 
-def re_ranking(desc_query, class_list, image_names, indices, dataset, top_n_ranking, pca_matrix, model_h, model_v):
+def re_ranking(desc_query, class_list, batch_size, image_names, indices, dataset, top_n_ranking, pca_matrix, model_h, model_v):
     if dataset == 'Oxford' or dataset == 'Oxford105k':
-        images_path = '/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/'
+        images_path = '/data/jim011/datasets_retrieval/Oxford5k/images/'
 
     if dataset == 'Paris' or dataset == 'Paris106k':
-        images_path = '/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris/'
+        images_path = '/data/jim011/datasets_retrieval/Paris6k/images/'
 
     index_q = indices[0:top_n_ranking]
     tt = time.time()
@@ -95,7 +95,6 @@ def re_ranking(desc_query, class_list, image_names, indices, dataset, top_n_rank
     else:
         image_batch = top_n_ranking
 
-    batch_size = 12
     n_iterations = int(math.floor(top_n_ranking / image_batch))
     last_batch = top_n_ranking % image_batch
     scores = np.zeros(top_n_ranking, dtype=np.float32)

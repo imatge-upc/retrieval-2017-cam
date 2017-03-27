@@ -57,9 +57,9 @@ def save_ranking_one_query(data, query_desc, image_names, path, image_name):
 # Save Rankings for all the queries (GS)
 def save_rankings(indices, image_names, path, dataset):
     if dataset == 'Oxford':
-        f = open('/imatge/ajimenez/work/ITR/oxford/lists/queries_list_oxford.txt')
+        f = open('/home/jim011/workspace/retrieval-2017-icmr/lists//queries_list_oxford.txt')
     if dataset == 'Paris':
-        f = open('/imatge/ajimenez/work/ITR/paris/lists/queries_list_paris.txt')
+        f = open('/home/jim011/workspace/retrieval-2017-icmr/lists//queries_list_paris.txt')
 
     for line in f:
         for i in range(0, image_names.shape[0]):
@@ -98,7 +98,7 @@ def compute_distances_optim(desc, data):
 def evaluate_oxford(ranking_path):
     print('Ranking and Evaluating Oxford...')
     #  queries
-    path_gt = "/imatge/ajimenez/work/datasets_retrieval/Oxford/2_groundtruth/"
+    path_gt = "/data/jim011/datasets_retrieval/Oxford5k/ground_truth/"
     query_names = ["all_souls", "ashmolean", "balliol", "bodleian", "christ_church", "cornmarket","hertford","keble","magdalen","pitt_rivers","radcliffe_camera"]
 
     ap_list = list()
@@ -132,7 +132,7 @@ def evaluate_oxford(ranking_path):
 def evaluate_paris(ranking_path):
     print('Ranking and Evaluating Paris...')
     #  queries
-    path_gt = "/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris_gt/"
+    path_gt = "/data/jim011/datasets_retrieval/Paris6k/ground_truth/"
     query_names = ["defense", "eiffel", "invalides", "louvre", "moulinrouge", "museedorsay", "notredame", "pantheon",
                    "pompidou", "sacrecoeur", "triomphe"]
     ap_list = list()
@@ -162,16 +162,16 @@ def evaluate_paris(ranking_path):
     ap_file.close()
     return mean_ap
 
+
 # Best Images Plot
 def show_images_top(n_images, dataset):
-
     if dataset == 'Oxford':
-        query_list = open('/imatge/ajimenez/workspace/ITR/lists/queries_list_oxford.txt')
-        images_path = '/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/'
+        query_list = open('/home/jim011/workspace/retrieval-2017-icmr/lists/queries_list_oxford.txt')
+        images_path = '/data/jim011/datasets_retrieval/Oxford5k/'
         ranking_path = '/imatge/ajimenez/workspace/ITR/results/ranked_oxford_RMAC_PCA/'
 
     elif dataset == 'Paris':
-        query_list = open('/imatge/ajimenez/workspace/ITR/lists/queries_list_paris.txt')
+        query_list = open('/home/jim011/workspace/retrieval-2017-icmr/lists//queries_list_paris.txt')
 
     for query in query_list:
         count = 1
@@ -193,12 +193,12 @@ def show_images_top(n_images, dataset):
 def show_stats(dataset, results_path):
 
     if dataset == 'Oxford':
-        path_gt = "/imatge/ajimenez/work/datasets_retrieval/Oxford/2_groundtruth/"
+        path_gt = "/data/jim011/datasets_retrieval/Oxford5k/ground_truth/"
         query_names = ["all_souls", "ashmolean", "balliol", "bodleian", "christ_church", "cornmarket", "hertford",
                        "keble",
                        "magdalen", "pitt_rivers", "radcliffe_camera"]
     elif dataset == 'Paris':
-        path_gt = "/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris_gt/"
+        path_gt = "/data/jim011/datasets_retrieval/Paris6k/ground_truth/"
         query_names = ["defense", "eiffel", "invalides", "louvre", "moulinrouge", "museedorsay", "notredame",
                        "pantheon",
                        "pompidou", "sacrecoeur", "triomphe"]

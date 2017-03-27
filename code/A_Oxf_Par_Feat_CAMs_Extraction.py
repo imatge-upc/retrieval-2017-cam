@@ -1,5 +1,6 @@
 from scipy.misc import imread
 import sys
+import getopt
 import time
 import h5py
 import numpy as np
@@ -9,12 +10,34 @@ from utils import create_folders, save_data, preprocess_images, preprocess_query
 from pooling_functions import weighted_cam_pooling
 
 
-# Dataset Selection
-dataset = 'Oxford'
-#dataset = 'Paris'
+# Instructions Arguments: python script.py -d 'Oxford/Paris' -a 'Offline/Online'
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "a:d:")
+    flag_d = False
+    flag_a = False
+except getopt.GetoptError:
+    print 'script.py -d <dataset> -a <aggregation>'
+    sys.exit(2)
+for opt, arg in opts:
+    if opt == '-d':
+        if arg == 'Oxford' or arg == 'Paris':
+            dataset = arg
+            flag_d = True
+    elif opt == "-a":
+        if arg == 'Offline' or arg == 'Online':
+            aggregation_type = arg
+            flag_a = True
 
-# Extract Online or Offline (Online saves 1 file/image)
-aggregation_type = 'Offline'
+
+# Dataset Selection (Oxford/Paris) - Default
+if not flag_d:
+    dataset = 'Oxford'
+    print 'Default dataset: ', dataset
+
+# Extract Online or Offline (Online saves 1 file/image) - Default
+if not flag_a:
+    aggregation_type = 'Offline'
+    print 'Default aggregation: ', aggregation_type
 
 # Image Pre-processing (Size W x H)
 
@@ -43,7 +66,7 @@ else:
 # Model Selection: VGG_CAM
 if model_name == 'Vgg_16_CAM':
     nb_classes = 1000
-    VGGCAM_weight_path = '/imatge/ajimenez/work/ITR/models/vgg_cam_weights.h5'
+    VGGCAM_weight_path = '/home/jim011/workspace/retrieval-2017-icmr/models/vgg_cam_weights.h5'
     layer = 'relu5_1'
     dim_descriptor = 512
 
@@ -51,51 +74,57 @@ if model_name == 'Vgg_16_CAM':
 # CAM Extraction (# CAMs)
 
 if aggregation_type == 'Offline':
-    num_classes = 32
+    num_classes = 64
 elif aggregation_type == 'Online':
     num_classes = 1000
 
 # Images to load into the net (+ images, + memory, + fast)
-batch_size = 12
+batch_size = 6
 # Images to pre-load (+ images, + memory, + fast) (also saves feats & CAMs for this number when saving-CAMs)
-image_batch_size = 250
+image_batch_size = 500
 
 # For saving also features & CAMs
-saving_CAMs = True
+saving_CAMs = False
 # Index for saving chunks
 ind = 0
 
 
 if dataset == 'Oxford':
     n_img_dataset = 5063
-    train_list_path_h = "/imatge/ajimenez/work/ITR/oxford/lists/list_oxford_horizontal_no_queries.txt"
-    train_list_path_v = "/imatge/ajimenez/work/ITR/oxford/lists/list_oxford_vertical_no_queries.txt"
-    path_descriptors = '/imatge/ajimenez/work/ITR/oxford/descriptors_new2/' + model_name + '/' + layer + '/' + dim + '/'
+    train_list_path_h = "/home/jim011/workspace/retrieval-2017-icmr/lists/list_oxford_horizontal_no_queries.txt"
+    train_list_path_v = "/home/jim011/workspace/retrieval-2017-icmr/lists/list_oxford_vertical_no_queries.txt"
+    path_descriptors = '/data/jim011/oxford/descriptors/' + model_name + '/' + layer + '/' + dim + '/'
     descriptors_cams_path_wp = path_descriptors + 'oxford_all_' + str(num_classes) + '_wp.h5'
     descriptors_cams_path_mp = path_descriptors + 'oxford_all_' + str(num_classes) + '_mp.h5'
 
+    if aggregation_type =='Online':
+        path_descriptors += 'online/'
     # If you want to save features & CAMs
-    feature_path = '/imatge/ajimenez/work/ITR/oxford/features/' + model_name + '/' + layer + '/' + dim + '/'
-    cam_path = '/imatge/ajimenez/work/ITR/oxford/cams/' + model_name + '/' + layer + '/' + dim + '/'
+    #feature_path = '/imatge/ajimenez/work/ITR/oxford/features/' + model_name + '/' + layer + '/' + dim + '/'
+    #cam_path = '/imatge/ajimenez/work/ITR/oxford/cams/' + model_name + '/' + layer + '/' + dim + '/'
 
     create_folders(path_descriptors)
-    create_folders(feature_path)
-    create_folders(cam_path)
+    #create_folders(feature_path)
+    #create_folders(cam_path)
 
 if dataset == 'Paris':
     n_img_dataset = 6392
-    train_list_path_h = "/imatge/ajimenez/work/ITR/paris/lists/list_paris_horizontal_no_queries.txt"
-    train_list_path_v = "/imatge/ajimenez/work/ITR/paris/lists/list_paris_vertical_no_queries.txt"
-    path_descriptors = '/imatge/ajimenez/work/ITR/paris/descriptors_new2/' + model_name + '/' + layer + '/' + dim + '/'
+    train_list_path_h = "/home/jim011/workspace/retrieval-2017-icmr/lists/list_paris_horizontal_no_queries.txt"
+    train_list_path_v = "/home/jim011/workspace/retrieval-2017-icmr/lists/list_paris_vertical_no_queries.txt"
+    path_descriptors = '/data/jim011/paris/descriptors/' + model_name + '/' + layer + '/' + dim + '/'
     descriptors_cams_path_wp = path_descriptors + 'paris_all_' + str(num_classes) + '_wp.h5'
     descriptors_cams_path_mp = path_descriptors + 'paris_all_' + str(num_classes) + '_mp.h5'
+
+    if aggregation_type =='Online':
+        path_descriptors += 'online/'
+
     create_folders(path_descriptors)
 
     # If you want to save features & CAMs
-    feature_path = '/imatge/ajimenez/work/ITR/paris/features/' + model_name + '/' + layer + '/' + dim + '/'
-    cam_path = '/imatge/ajimenez/work/ITR/paris/cams/' + model_name + '/' + layer + '/' + dim + '/'
-    create_folders(feature_path)
-    create_folders(cam_path)
+    #feature_path = '/imatge/ajimenez/work/ITR/paris/features/' + model_name + '/' + layer + '/' + dim + '/'
+    #cam_path = '/imatge/ajimenez/work/ITR/paris/cams/' + model_name + '/' + layer + '/' + dim + '/'
+    #create_folders(feature_path)
+    #create_folders(cam_path)
 
 
 def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_value, image_train_list_path, desc_wp, ind=0):
@@ -133,8 +162,8 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
             elif aggregation_type == 'Online':
                 features, cams = extract_feat_cam_all(model, layer, batch_size, data)
                 d_wp = weighted_cam_pooling(features, cams)
-                for img_ind in range(0, batch_size):
-                    #print 'Saved ' + image_names[img_ind] + '.h5'
+                for img_ind in range(0, image_batch_size):
+                    print 'Saved ' + image_names[img_ind] + '.h5'
                     save_data(d_wp[img_ind*nb_classes:(img_ind+1)*nb_classes], path_descriptors,
                               image_names[img_ind]+'.h5')
 
@@ -148,9 +177,9 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
         line = line.rstrip('\n')
         images[counter] = imread(line)
         if dataset == 'Oxford':
-            line = line.replace('/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/', '')
+            line = line.replace('/data/jim011/datasets_retrieval/Oxford5k/images/', '')
         elif dataset == 'Paris':
-            line = line.replace('/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris/', '')
+            line = line.replace('/data/jim011/datasets_retrieval/Paris6k/images/', '')
         image_names[counter] = (line.replace('.jpg', ''))
         counter += 1
         num_images += 1
@@ -186,6 +215,8 @@ def extract_cam_descriptors(model_name, batch_size, num_classes, size, mean_valu
 ########################################################################################################################
 # Main Script
 
+print 'Dataset: ', dataset
+print 'Aggregation type ', aggregation_type
 print 'Num classes: ', num_classes
 print 'Mean: ', mean_value
 
@@ -206,12 +237,12 @@ print desc_wp.shape
 # Queries
 if dataset == 'Oxford':
     i = 0
-    with open('/imatge/ajimenez/workspace/ITR/lists/list_queries_oxford.txt', "r") as f:
+    with open('/home/jim011/workspace/retrieval-2017-icmr/lists/list_queries_oxford.txt', "r") as f:
         for line in f:
             print i
             line = line.replace('\n', '')
             img = np.array(
-                (imread('/imatge/ajimenez/work/datasets_retrieval/Oxford/1_images/' + line + '.jpg')),
+                (imread('/data/jim011/datasets_retrieval/Oxford5k/images/' + line + '.jpg')),
                 dtype=np.float32)
 
             #img = np.transpose(img, (2, 0, 1))
@@ -240,6 +271,7 @@ if dataset == 'Oxford':
 
             elif aggregation_type == 'Online':
                 features, cams = extract_feat_cam_all(model, layer, batch_size, x)
+                d_wp = weighted_cam_pooling(features, cams)
                 print 'Saved ' + line + '.h5'
                 save_data(d_wp, path_descriptors, line+'.h5')
             print desc_wp.shape
@@ -248,12 +280,12 @@ if dataset == 'Oxford':
 
 elif dataset == 'Paris':
     i = 0
-    with open('/imatge/ajimenez/workspace/ITR/lists/list_queries_paris.txt', "r") as f:
+    with open('/home/jim011/workspace/retrieval-2017-icmr/lists/list_queries_paris.txt', "r") as f:
         for line in f:
             print i
             line = line.replace('\n', '')
             img = np.array(
-                (imread('/imatge/ajimenez/work/datasets_retrieval/Paris/imatges_paris/' + line + '.jpg')),
+                (imread('/data/jim011/datasets_retrieval/Paris6k/images/' + line + '.jpg')),
                 dtype=np.float32)
 
             # img = np.transpose(img, (2, 0, 1))
@@ -263,7 +295,7 @@ elif dataset == 'Paris':
             else:
                 size = size_h
 
-            data = preprocess_query(img, size[0], size[1], mean_value)
+            img_p = preprocess_query(img, size[0], size[1], mean_value)
 
             x = np.zeros((1, img_p.shape[0], img_p.shape[1], img_p.shape[2]), dtype=np.float32)
             model = VGGCAM(nb_classes, (img_p.shape[0], img_p.shape[1], img_p.shape[2]))
@@ -281,6 +313,7 @@ elif dataset == 'Paris':
 
             elif aggregation_type == 'Online':
                 features, cams = extract_feat_cam_all(model, layer, batch_size, x)
+                d_wp = weighted_cam_pooling(features, cams)
                 print 'Saved ' + line + '.h5'
                 save_data(d_wp, path_descriptors, line+'.h5')
 
@@ -290,6 +323,7 @@ elif dataset == 'Paris':
 print 'Saving Data...'
 print desc_wp.shape
 # Shape = [num_images * num_classes, dim_descriptor]
-save_data(desc_wp, descriptors_cams_path_wp, '')
+if aggregation_type =='Offline':
+    save_data(desc_wp, descriptors_cams_path_wp, '')
 print 'Data Saved'
 print 'Total time elapsed: ', time.time() - t_0
