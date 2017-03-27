@@ -30,9 +30,14 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 
 ## Slides
 
+[Slides](https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/slides/Class-Weighted%20Convolutional%20Features%20for%20Image%20Retrieval%20%20%09%09%09%09.pdf)
+
 ## Publication
 
 ## Results 
+
+![Comparison with State of the Art](https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/figs/StateArt1.png)
+![Comparison with State of the Art - QE & RE](https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/figs/StateArt2.png)
 
 ## Code Usage
 
