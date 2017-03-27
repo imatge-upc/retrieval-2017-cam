@@ -63,7 +63,7 @@ Here we provide the weigths of the model:
 
 ### How to run the code?
 
-First thing to do is setting the path for your images and model weights. We provide lists that divide images in vertical and horizontal for faster processing. At the beggining of each script there are some parameters that can be tuned like image preprocessing. 
+First thing to do (important!) is setting the path of your images and model weights. We provide lists (also modify path! - Find and Replace) that divide images in vertical and horizontal for faster processing. At the beggining of each script there are some parameters that can be tuned like image preprocessing. I have added a parser for arguments, at the beginning of each script it is shown an example of how to run them. 
 
 #### Feature Extraction
 
