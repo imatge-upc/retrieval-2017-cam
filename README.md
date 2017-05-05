@@ -74,18 +74,20 @@ Both scripts extract Class-Weighted Vectors. The first one is used for the origi
 * A_Oxf_Par_Feat_CAMs_Extraction.py 
 * A_Dist_Feat_CAMs_Extraction.py
 
-#### Offline Aggregation
 
-Select the parameters for the offline aggregation. You can join less vectors than computed in the previous script or all of them. Also applies the selected PCA. 
+#### Aggregation, Ranking and Evaluation
 
-* B_Offline_Aggregation.py
+In both scripts you can choose the dataset you want to evaluate and if use query expansion or re-ranking. The first one is for offline aggregation. The second one performs aggregation at the moment of testing.
 
-#### Ranking and Evaluation
+* B_Offline_Eval.py
+* B_Online_Aggregation_Eval.py
 
-In both scripts you can choose the dataset you want to evaluate and if use query expansion or re-ranking. The first one is for offline aggregation. The second one performs aggregation at the moment of testing. We only tried it with Oxford5k and Paris6k. 
+```
 
-* C_Offline_Eval.py
-* C_Online_Aggregation_Eval.py
+B_Online_Aggregation_Eval.py --d <dataset> --nc_q <nclasses_query> --pca <n_classes_pca> --qe <n_query_exp> --re <n_re_ranking> --nc_re <n_classes_re_ranking>
+
+```
+
 
 ## Aknowledgements
 We would like to specially thank Albert Gil and Josep Pujal from our technical support team at the Image Processing Group at UPC.
