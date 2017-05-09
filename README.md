@@ -8,9 +8,9 @@
 [XavierGiro-web]: https://imatge.upc.edu/web/people/xavier-giro
 [JoseAlvarez-web]: http://www.josemalvarez.net
 
-[AlbertJimenez-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/AlbertJimenez.png?raw=true "Albert Jimenez"
-[XavierGiro-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/XavierGiro.jpg?raw=true "Xavier Giro-i-Nieto"
-[JoseAlvarez-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/JoseAlvarez.png?raw=true "Jose Alvarez"
+[AlbertJimenez-photo]: https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/authors/AlbertJimenez.png?raw=true "Albert Jimenez"
+[XavierGiro-photo]: https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/authors/XavierGiro.jpg?raw=true "Xavier Giro-i-Nieto"
+[JoseAlvarez-photo]: https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/authors/JoseAlvarez.png?raw=true "Jose Alvarez"
 
 A joint collaboration between:
 
@@ -21,12 +21,17 @@ A joint collaboration between:
 [gpi-web]: https://imatge.upc.edu/web/ 
 [data61-web]: http://www.data61.csiro.au
 
-[logo-data61]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/logos/data61.png?raw=true "Data 61"
-[logo-gpi]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/logos/gpi.png?raw=true "UPC Image Processing Group"
+[logo-data61]: https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/logos/data61.png?raw=true "Data 61"
+[logo-gpi]: https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/logos/gpi.png?raw=true "UPC Image Processing Group"
 
 
 ## Abstract 
 Recently lots of works have proven that using Convolutional Neural Networks as feature extractors is very effective at tackling image retrieval tasks. In our work we explore encoding images based on their predicted semantics, building descriptors that gather more relevant knowledge about the scenes. We propose a retrieval pipeline where we employ Class Activation Maps to spatially weight convolutional features given the objects location. This class activation maps can be further exploited in a post re-ranking stage where they can provide an easy manner to compute regions of interest. Our experiments on two publicly available datasets, Oxford5k and Paris6k, demonstrate that our system is competitive and even outperforms the current state-of-the-art in off-the-shelf image retrieval.
+
+![Vgg_cams](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/vgg_cam.png?raw=true)
+
+
+![Encoding_pipeline](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/Pipeline.png?raw=true)
 
 ## Slides
 
@@ -36,8 +41,11 @@ Recently lots of works have proven that using Convolutional Neural Networks as f
 
 ## Results 
 
-![Comparison with State of the Art](https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/figs/StateArt1.png)
-![Comparison with State of the Art - QE & RE](https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/figs/StateArt2.png)
+![Comparison with State of the Art](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/StateArt1.png)
+
+
+
+![Comparison with State of the Art - QE & RE](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/StateArt2.png)
 
 ## Code Usage
 
@@ -96,8 +104,8 @@ We would like to specially thank Albert Gil and Josep Pujal from our technical s
 |:-:|:-:|
 | [Albert Gil](AlbertGil-web)  |  [Josep Pujal](JosepPujal-web) |
 
-[AlbertGil-photo]: https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/AlbertGil.jpg?raw=true "Albert Gil"
-[JosepPujal-photo]:https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/authors/JosepPujal.jpg?raw=true "Josep Pujal"
+[AlbertGil-photo]: https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/authors/AlbertGil.jpg?raw=true "Albert Gil"
+[JosepPujal-photo]:https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/authors/JosepPujal.jpg?raw=true "Josep Pujal"
 
 [AlbertGil-web]: https://imatge.upc.edu/web/people/albert-gil-moreno
 [JosepPujal-web]: https://imatge.upc.edu/web/people/josep-pujal
