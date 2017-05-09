@@ -26,7 +26,11 @@ A joint collaboration between:
 
 
 ## Abstract 
-Recently lots of works have proven that using Convolutional Neural Networks as feature extractors is very effective at tackling image retrieval tasks. In our work we explore encoding images based on their predicted semantics, building descriptors that gather more relevant knowledge about the scenes. We propose a retrieval pipeline where we employ Class Activation Maps to spatially weight convolutional features given the objects location. This class activation maps can be further exploited in a post re-ranking stage where they can provide an easy manner to compute regions of interest. Our experiments on two publicly available datasets, Oxford5k and Paris6k, demonstrate that our system is competitive and even outperforms the current state-of-the-art in off-the-shelf image retrieval.
+Image retrieval in realistic scenarios targets large dynamic datasets of unlabeled images. 
+In these cases, training or fine-tuning a model every time new images are added to the database is neither efficient nor scalable.
+Convolutional neural networks trained for image classification over large datasets have been proven effective feature extractors when transferred to the task of image retrieval. The most successful approaches are based in encoding the activations of convolutional layers as they convey the image spatial information. Our proposal goes beyond and aims at a local-aware encoding of these features depending on the predicted image semantics, with the advantage of using only of the knowledge contained inside the network.
+In particular, we employ Class Activation Maps (CAMs) to obtain the most discriminative regions from a semantic perspective. Additionally, CAMs are also used to generate object proposals during an unsupervised re-ranking stage after a first fast search. 
+Our experiments on two public available datasets for instance retrieval, Oxford5k and Paris6k, demonstrate that our system is competitive and even outperforms the current state-of-the-art when using off-the-shelf models trained on the object classes of ImageNet.
 
 
 ![Encoding_pipeline](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/pipeline.png?raw=true)
