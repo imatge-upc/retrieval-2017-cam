@@ -71,7 +71,7 @@ Our Experiments have been carried out in these datasets:
 
 Here we provide the weigths of the model:
 
-* [CAM-VGG-16 Weights](https://drive.google.com/open?id=0BwotWbbE50RQLWtPZ1VWTDYzUlE)
+* [CAM-VGG-16 Weights](https://drive.google.com/open?id=0BwotWbbE50RQMlFnZ1N3c2tvUm8)
 
 ### How to run the code?
 
