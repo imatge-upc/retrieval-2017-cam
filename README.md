@@ -37,9 +37,11 @@ Our experiments on two public available datasets for instance retrieval, Oxford5
 
 ## Slides
 
-[Slides](https://github.com/imatge-upc/retrieval-2017-icmr/blob/master/slides/Class-Weighted%20Convolutional%20Features%20for%20Image%20Retrieval%20.pdf)
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/3dG0uuBHScqPTa" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/xavigiro/class-weighted-convolutional-features-for-image-retrieval" title="Class Weighted Convolutional Features for Image Retrieval " target="_blank">Class Weighted Convolutional Features for Image Retrieval </a> </strong> from <strong><a target="_blank" href="https://www.slideshare.net/xavigiro">Xavier Giro</a></strong> </div>
 
 ## Publication
+
+(under review)
 
 ## Results 
 
