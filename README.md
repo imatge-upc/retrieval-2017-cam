@@ -26,10 +26,11 @@ A joint collaboration between:
 
 
 ## Abstract 
-Image retrieval in realistic scenarios targets large dynamic datasets of unlabeled images. 
-In these cases, training or fine-tuning a model every time new images are added to the database is neither efficient nor scalable.
-Convolutional neural networks trained for image classification over large datasets have been proven effective feature extractors when transferred to the task of image retrieval. The most successful approaches are based in encoding the activations of convolutional layers as they convey the image spatial information. Our proposal goes beyond and aims at a local-aware encoding of these features depending on the predicted image semantics, with the advantage of using only of the knowledge contained inside the network.
+Image retrieval in realistic scenarios targets large dynamic datasets of unlabeled images. In these cases, training or fine-tuning a model every time new images are added to the database is neither efficient nor scalable. Convolutional Neural Networks trained for image classification over large datasets have been proven effective feature extractors when transferred to the task of image retrieval. The most successful approaches are based in encoding the activations of convolutional layers as they convey the image spatial information. 
+
+Our proposal goes beyond and aims at a local-aware encoding of these features depending on the predicted image semantics, with the advantage of using only of the knowledge contained inside the network.
 In particular, we employ Class Activation Maps (CAMs) to obtain the most discriminative regions from a semantic perspective. Additionally, CAMs are also used to generate object proposals during an unsupervised re-ranking stage after a first fast search. 
+
 Our experiments on two public available datasets for instance retrieval, Oxford5k and Paris6k, demonstrate that our system is competitive and even outperforms the current state-of-the-art when using off-the-shelf models trained on the object classes of ImageNet.
 
 
@@ -88,6 +89,11 @@ Both scripts extract Class-Weighted Vectors. The first one is used for the origi
 * A_Oxf_Par_Feat_CAMs_Extraction.py 
 * A_Dist_Feat_CAMs_Extraction.py
 
+```
+
+A_Oxf_Par_Feat_CAMs_Extraction.py  -d <dataset> -a <agreggation>
+
+```
 
 #### Aggregation, Ranking and Evaluation
 
@@ -98,7 +104,7 @@ In both scripts you can choose the dataset you want to evaluate and if use query
 
 ```
 
-B_Online_Aggregation_Eval.py --d <dataset> --nc_q <nclasses_query> --pca <n_classes_pca> --qe <n_query_exp> --re <n_re_ranking> --nc_re <n_classes_re_ranking>
+B_Online_Aggregation_Eval.py -d <dataset> --nc_q <nclasses_query> --pca <n_classes_pca> --qe <n_query_exp> --re <n_re_ranking> --nc_re <n_classes_re_ranking>
 
 ```
 
