@@ -48,17 +48,23 @@ Our experiments on two public available datasets for instance retrieval, Oxford5
 
 ## Results 
 
+### Comparison with State of the Art
 ![Comparison with State of the Art](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/StateArt1.png?raw=true)
-
-
 
 ![Comparison with State of the Art - QE & RE](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/StateArt2.png?raw=true)
 
+### Qualitative Results 
+![Qualitative Results of the Search](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/Qualitative.png?raw=true)
+
 ## Code Usage
 
-### Prerequisites
-We have used Keras running over Theano to perform the experiments. 
+In this repository we provide the code used in our experiments. 
+VGG-16 CAM experiments where carried out using [Keras](keras.io) running over [Theano](http://deeplearning.net/software/theano/).
+DenseNet and ResNet experiments were carried out using [PyTorch](http://pytorch.org). 
 
+In the next Section we explain how to run the code in Keras+Theano. To run the experiments using PyTorch, the requirements are the same plus having installed Pytorch and the torchvision package.
+
+### Prerequisites
 Was done previous to Keras 2.0 but should work with that version as well. 
 
 Python packages necessary specified in *requirements.txt* run:
@@ -74,7 +80,7 @@ Our Experiments have been carried out in these datasets:
 
 * [Paris Buildings](http://www.robots.ox.ac.uk/~vgg/data/parisbuildings/) (and Paris 106k).
 
-Here we provide the weigths of the model:
+Here we provide the weigths of the model (paste them in models folder):
 
 * [CAM-VGG-16 Weights](https://drive.google.com/open?id=0BwotWbbE50RQMlFnZ1N3c2tvUm8)
 
