@@ -26,12 +26,11 @@ A joint collaboration between:
 
 
 ## Abstract 
-Image retrieval in realistic scenarios targets large dynamic datasets of unlabeled images. In these cases, training or fine-tuning a model every time new images are added to the database is neither efficient nor scalable. Convolutional Neural Networks trained for image classification over large datasets have been proven effective feature extractors when transferred to the task of image retrieval. The most successful approaches are based in encoding the activations of convolutional layers as they convey the image spatial information. 
+Image retrieval in realistic scenarios targets large dynamic datasets of unlabeled images. In these cases, training or fine-tuning a model every time new images are added to the database is neither efficient nor scalable. Convolutional neural networks trained for image classification over large datasets have been proven effective feature extractors for image retrieval. 
 
-Our proposal goes beyond and aims at a local-aware encoding of these features depending on the predicted image semantics, with the advantage of using only of the knowledge contained inside the network.
-In particular, we employ Class Activation Maps (CAMs) to obtain the most discriminative regions from a semantic perspective. Additionally, CAMs are also used to generate object proposals during an unsupervised re-ranking stage after a first fast search. 
+The most successful approaches are based on encoding the activations of convolutional layers, as they convey the image spatial information. In this paper, we go beyond this spatial information and propose a local-aware encoding of convolutional features based on semantic information predicted in the target image. To this end, we obtain the most discriminative regions of an image using Class Activation Maps (CAMs). CAMs are based on the knowledge contained in the network and therefore, our approach, has the additional advantage of not requiring external information. In addition, we use CAMs to generate object proposals during an unsupervised re-ranking stage after a first fast search. 
 
-Our experiments on two public available datasets for instance retrieval, Oxford5k and Paris6k, demonstrate that our system is competitive and even outperforms the current state-of-the-art when using off-the-shelf models trained on the object classes of ImageNet.
+Our experiments on two public available datasets for instance retrieval, Oxford5k and Paris6k, demonstrate the competitiveness of our approach outperforming the current state-of-the-art when using off-the-shelf models trained on ImageNet.
 
 
 ![Encoding_pipeline](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/pipeline.png?raw=true)
