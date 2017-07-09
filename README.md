@@ -1,4 +1,5 @@
 # Class-Weighted Convolutional Features for Image Retrieval
+## 28th British Machine Vision Conference (BMVC 2017)
 
 | ![ALbert Jimenez][AlbertJimenez-photo]  | ![Xavier Giro-i-Nieto][XavierGiro-photo]  |  ![Jose M. Alvarez][JoseAlvarez-photo] | 
 |:-:|:-:|:-:|
@@ -43,7 +44,23 @@ Our experiments on two public available datasets for instance retrieval, Oxford5
 
 ## Publication
 
-(under review)
+Please cite with the following Bibtex code:
+
+````
+@InProceedings{Jimenez_2017_BMVC,
+author = {Jimenez, Albert and Alvarez, Jose M., and Giro-i-Nieto, Xavier},
+title = {Class-Weighted Convolutional Features for Visual Instance Search},
+booktitle = {28th British Machine Vision Conference (BMVC)},
+month = {September},
+year = {2017}
+}
+````
+
+You may also want to refer to our publication with the more human-friendly Chicago style:
+
+*Alber Jimenez, Jose M. Alvarez, and Xavier Giro-i-Nieto. "Class-Weighted Convolutional Features for Visual Instance Search." In Proceedings of the 28th British Machine Vision Conference (BMVC). 2017.*
+
+
 
 ## Results 
 
