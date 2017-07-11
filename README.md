@@ -32,11 +32,7 @@ Image retrieval in realistic scenarios targets large dynamic datasets of unlabel
 
 ![Encoding_pipeline](https://github.com/imatge-upc/Class-Weighted-Convolutional-Features-for-Image-Retrieval/blob/master/figs/pipeline.png?raw=true)
 
-## Slides
 
-<center>
-<iframe src="//www.slideshare.net/slideshow/embed_code/key/3dG0uuBHScqPTa" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/xavigiro/class-weighted-convolutional-features-for-image-retrieval" title="Class Weighted Convolutional Features for Image Retrieval " target="_blank">Class Weighted Convolutional Features for Image Retrieval </a> </strong> from <strong><a target="_blank" href="https://www.slideshare.net/xavigiro">Xavier Giro</a></strong> </div>
-</center>
 
 ## Publication
 
@@ -58,6 +54,11 @@ You may also want to refer to our publication with the more human-friendly Chica
 
 *Alber Jimenez, Jose M. Alvarez, and Xavier Giro-i-Nieto. "Class-Weighted Convolutional Features for Visual Instance Search." In Proceedings of the 28th British Machine Vision Conference (BMVC). 2017.*
 
+## Slides
+
+<center>
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/3dG0uuBHScqPTa" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/xavigiro/class-weighted-convolutional-features-for-image-retrieval" title="Class Weighted Convolutional Features for Image Retrieval " target="_blank">Class Weighted Convolutional Features for Image Retrieval </a> </strong> from <strong><a target="_blank" href="https://www.slideshare.net/xavigiro">Xavier Giro</a></strong> </div>
+</center>
 
 
 ## Results 
