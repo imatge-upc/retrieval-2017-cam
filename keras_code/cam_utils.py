@@ -92,8 +92,8 @@ def extract_feat_cam_all(model, layer, batch_size, images, top_nclass=1000):
     f_shape = conv_layer_features.output_shape
 
     # Initialize Arrays
-    features_conv = np.zeros((num_samples, f_shape[1], images.shape[2]%16, images.shape[3]%16))
-    cams = np.zeros((images.shape[0], top_nclass, images.shape[2]%16, images.shape[3]%16), dtype=np.float32)
+    features_conv = np.zeros((num_samples, f_shape[1], images.shape[2]//16, images.shape[3]//16))
+    cams = np.zeros((images.shape[0], top_nclass, images.shape[2]//16, images.shape[3]//16), dtype=np.float32)
 
     # Function to get conv_maps
     get_output = K.function([model.layers[0].input, K.learning_phase()],
