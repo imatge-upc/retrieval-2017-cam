@@ -165,11 +165,11 @@ desc_wp = np.zeros((0, dim_descriptor), dtype=np.float32)
 
 # Horizontal Images
 desc_wp, c_ind = \
-    extract_cam_descriptors(model_name, batch_size, num_classes, size_h, mean_value, train_list_path_h, desc_wp, chunk_index)
+    extract_cam_descriptors(model, batch_size, num_classes, size_h, mean_value, train_list_path_h, desc_wp, chunk_index)
 
 # Vertical Images
 desc_wp, c_ind = \
-    extract_cam_descriptors(model_name, batch_size, num_classes, size_v, mean_value, train_list_path_v, desc_wp, c_ind, ind)
+    extract_cam_descriptors(model, batch_size, num_classes, size_v, mean_value, train_list_path_v, desc_wp, c_ind, ind)
 
 
 print 'Data Saved'
