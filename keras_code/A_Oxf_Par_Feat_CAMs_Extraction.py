@@ -238,12 +238,12 @@ desc_sp = np.zeros((0, dim_descriptor), dtype=np.float32)
 
 # Horizontal Images
 desc_wp, desc_sp, desc_sp_c = \
-    extract_cam_descriptors(model_name, batch_size, num_classes, size_h, mean_value, train_list_path_h,
+    extract_cam_descriptors(model, batch_size, num_classes, size_h, mean_value, train_list_path_h,
                             desc_wp, desc_sp, desc_sp_c)
 
 # Vertical Images
 desc_wp, desc_sp, desc_sp_c = \
-    extract_cam_descriptors(model_name, batch_size, num_classes, size_v, mean_value, train_list_path_v,
+    extract_cam_descriptors(model, batch_size, num_classes, size_v, mean_value, train_list_path_v,
                             desc_wp, desc_sp, desc_sp_c, ind)
 
 
