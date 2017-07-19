@@ -281,7 +281,7 @@ if dataset == 'Oxford':
                 #desc_sp_c = np.concatenate((desc_sp_c, d_sp_c))
 
             elif aggregation_type == 'Online':
-                features, cams = extract_feat_cam_all(model, layer, batch_size, x)
+                features, cams = extract_feat_cam_all(model, layer, batch_size, img_p)
                 d_wp = weighted_cam_pooling(features, cams)
                 print 'Saved ' + line + '.h5'
                 save_data(d_wp, path_descriptors, line+'.h5')
@@ -321,7 +321,7 @@ elif dataset == 'Paris':
                 #desc_sp_c = np.concatenate((desc_sp_c, d_sp_c))
 
             elif aggregation_type == 'Online':
-                features, cams = extract_feat_cam_all(model, layer, batch_size, x)
+                features, cams = extract_feat_cam_all(model, layer, batch_size, img_p)
                 d_wp = weighted_cam_pooling(features, cams)
                 print 'Saved ' + line + '.h5'
                 save_data(d_wp, path_descriptors, line+'.h5')
