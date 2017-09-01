@@ -36,7 +36,7 @@ Image retrieval in realistic scenarios targets large dynamic datasets of unlabel
 
 ## Publication
 
-A [preprint of this paper](http://imatge-upc.github.io/retrieval-2017-cam/) is available on arXiv.
+A [preprint of this paper](https://arxiv.org/abs/1707.02581) is available on arXiv.
 
 Please cite with the following Bibtex code:
 
