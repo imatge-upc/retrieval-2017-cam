@@ -36,7 +36,7 @@ Image retrieval in realistic scenarios targets large dynamic datasets of unlabel
 
 ## Publication
 
-A [preprint of this paper](https://arxiv.org/abs/1707.02581) is available on arXiv.
+A [preprint of this paper](https://arxiv.org/abs/1707.02581) is available on arXiv and in the [BMVC 2017 proceedings](https://bmvc2017.london/programme-1/).
 
 Please cite with the following Bibtex code:
 
